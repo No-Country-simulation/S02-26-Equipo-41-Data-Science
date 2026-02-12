@@ -5,7 +5,7 @@
       class="material-symbols-outlined text-primary"
       :class="iconSizeClass"
     >
-      analytics
+      {{ icon }}
     </span>
     <h1 
       :class="[
@@ -30,6 +30,10 @@ const props = defineProps({
   center: {
     type: Boolean,
     default: false
+  },
+  icon: {
+    type: String,
+    default: 'analytics'
   }
 })
 
