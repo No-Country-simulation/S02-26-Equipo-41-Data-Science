@@ -5,21 +5,45 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                echo 'Clonando repositorio...'
+                echo '📥 Clonando repositorio...'
             }
         }
 
-        stage('Prueba simple') {
+        stage('Build') {
             steps {
-                echo 'Hola Jenkins 🚀'
+                echo '🔧 Simulando build...'
+                sh 'echo "Compilando proyecto..."'
             }
         }
 
-        stage('Mostrar archivos del repo') {
+        stage('Test') {
             steps {
-                sh 'ls -la'
+                echo '🧪 Ejecutando tests...'
+                sh 'echo "Test 1 OK"'
+                sh 'echo "Test 2 OK"'
             }
         }
 
+        stage('Quality Gate') {
+            steps {
+                echo '🔍 Verificando calidad...'
+                sh 'if [ -f error.txt ]; then exit 1; else echo "Sin errores"; fi'
+            }
+        }
+
+        stage('Deploy (simulado)') {
+            steps {
+                echo '🚀 Desplegando aplicación (simulado)...'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Pipeline completado con éxito'
+        }
+        failure {
+            echo '❌ El pipeline falló'
+        }
     }
 }
