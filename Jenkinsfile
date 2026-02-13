@@ -5,45 +5,39 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                echo '📥 Clonando repositorio...'
+                echo "Clonando repositorio..."
+                checkout scm
             }
         }
 
-        stage('Build') {
+        stage('Lint') {
             steps {
-                echo '🔧 Simulando build...'
-                sh 'echo "Compilando proyecto..."'
+                echo "Ejecutando lint..."
+                sh 'echo "Simulando lint..."'
             }
         }
 
         stage('Test') {
             steps {
-                echo '🧪 Ejecutando tests...'
-                sh 'echo "Test 1 OK"'
-                sh 'echo "Test 2 OK"'
+                echo "Ejecutando tests..."
+                sh 'echo "Simulando tests..."'
             }
         }
 
-        stage('Quality Gate') {
+        stage('Build') {
             steps {
-                echo '🔍 Verificando calidad...'
-                sh 'if [ -f error.txt ]; then exit 1; else echo "Sin errores"; fi'
-            }
-        }
-
-        stage('Deploy (simulado)') {
-            steps {
-                echo '🚀 Desplegando aplicación (simulado)...'
+                echo "Construyendo proyecto..."
+                sh 'echo "Simulando build..."'
             }
         }
     }
 
     post {
         success {
-            echo '✅ Pipeline completado con éxito'
+            echo "Pipeline completado correctamente ✅"
         }
         failure {
-            echo '❌ El pipeline falló'
+            echo "Pipeline falló ❌"
         }
     }
 }
