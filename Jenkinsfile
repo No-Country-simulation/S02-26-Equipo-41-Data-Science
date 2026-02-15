@@ -2,6 +2,22 @@ pipeline {
     agent none 
 
     stages {
+        // --- ESTE STAGE ELIMINA LOS ARCHIVOS BLOQUEADOS ---
+        stage('Fix Permissions & Cleanup') {
+            agent {
+                docker { 
+                    image 'alpine'
+                    args '-u root' 
+                }
+            }
+            steps {
+                echo '🧹 Limpiando archivos protegidos de ejecuciones anteriores...'
+                // Borramos node_modules y cualquier rastro de root
+                sh 'rm -rf ./*/node_modules || true'
+                sh 'rm -rf ./*/.npm || true'
+            }
+        }
+
         stage('Install & Build Frontend') {
             agent {
                 docker { 
