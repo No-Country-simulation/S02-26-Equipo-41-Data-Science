@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "frontend-ci-test"
+    }
+
+    stages {
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("${IMAGE_NAME}", ".")
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    docker.image("${IMAGE_NAME}").inside {
+                        sh 'npm install'
+                    }
+                }
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                script {
+                    docker.image("${IMAGE_NAME}").inside {
+                        sh 'npm run lint'
+                    }
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                script {
+                    docker.image("${IMAGE_NAME}").inside {
+                        sh 'npm run test'
+                    }
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    docker.image("${IMAGE_NAME}").inside {
+                        sh 'npm run build'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Frontend CI PASÓ ✅"
+        }
+        failure {
+            echo "Frontend CI FALLÓ ❌"
+        }
+    }
+}
