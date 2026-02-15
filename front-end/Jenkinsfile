@@ -1,37 +1,28 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:20-alpine'
-            args '-u root -v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    agent none // Quitamos el agente global
 
     stages {
-        stage('Install Dependencies') {
+        stage('Install & Build Frontend') {
+            agent {
+                docker { image 'node:20-alpine' }
+            }
             steps {
-                script {
-                    // Usamos el nombre exacto de tu carpeta: front-end
-                    if (fileExists('front-end/package.json')) {
-                        echo '📦 Carpeta front-end detectada. Instalando...'
-                        dir('front-end') {
-                            sh 'npm install'
-                        }
-                    } else {
-                        echo '⚠️ No se encontró front-end/package.json. Saltando instalación.'
-                    }
+                dir('front-end') {
+                    echo '📦 Instalando dependencias...'
+                    sh 'npm install'
+                    echo '🏗️ Generando build...'
+                    sh 'npm run build --if-present'
                 }
             }
         }
 
-        stage('Build Docker') {
+        stage('Build Docker Image') {
+            agent any // Este corre directamente en el servidor Jenkins (que tiene Docker)
             steps {
                 script {
-                    // Verificamos el Dockerfile en la raíz
                     if (fileExists('Dockerfile')) {
-                        echo '🐳 Construyendo imagen desde la raíz...'
+                        echo '🐳 Construyendo imagen desde el host...'
                         sh 'docker build -t frontend-equipo-41:latest .'
-                    } else {
-                        echo '❌ No se encontró el Dockerfile para construir la imagen.'
                     }
                 }
             }
@@ -39,7 +30,7 @@ pipeline {
     }
 
     post {
-        success { echo '✅ ¡Pipeline finalizado correctamente!' }
-        failure { echo '❌ Falló el pipeline, revisa el nombre de las carpetas.' }
+        success { echo '✅ ¡Pipeline exitoso!' }
+        failure { echo '❌ Falló el pipeline.' }
     }
 }
