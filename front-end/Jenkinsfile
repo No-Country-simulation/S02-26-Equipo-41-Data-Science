@@ -1,0 +1,45 @@
+pipeline {
+    agent {
+        docker {
+            image 'node:20-alpine'
+            args '-u root -v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
+
+    stages {
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    // Usamos el nombre exacto de tu carpeta: front-end
+                    if (fileExists('front-end/package.json')) {
+                        echo '📦 Carpeta front-end detectada. Instalando...'
+                        dir('front-end') {
+                            sh 'npm install'
+                        }
+                    } else {
+                        echo '⚠️ No se encontró front-end/package.json. Saltando instalación.'
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker') {
+            steps {
+                script {
+                    // Verificamos el Dockerfile en la raíz
+                    if (fileExists('Dockerfile')) {
+                        echo '🐳 Construyendo imagen desde la raíz...'
+                        sh 'docker build -t frontend-equipo-41:latest .'
+                    } else {
+                        echo '❌ No se encontró el Dockerfile para construir la imagen.'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success { echo '✅ ¡Pipeline finalizado correctamente!' }
+        failure { echo '❌ Falló el pipeline, revisa el nombre de las carpetas.' }
+    }
+}
