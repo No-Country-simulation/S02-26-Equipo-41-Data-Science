@@ -2,7 +2,6 @@ pipeline {
     agent none 
 
     stages {
-        // --- ESTE STAGE ELIMINA LOS ARCHIVOS BLOQUEADOS ---
         stage('Fix Permissions & Cleanup') {
             agent {
                 docker { 
@@ -11,10 +10,9 @@ pipeline {
                 }
             }
             steps {
-                echo '🧹 Limpiando archivos protegidos de ejecuciones anteriores...'
-                // Borramos node_modules y cualquier rastro de root
-                sh 'rm -rf ./*/node_modules || true'
-                sh 'rm -rf ./*/.npm || true'
+                echo '🧹 Limpiando desde la carpeta front-end...'
+                // Al estar dentro de front-end, borramos lo local
+                sh 'rm -rf node_modules .npm || true'
             }
         }
 
@@ -26,12 +24,9 @@ pipeline {
                 }
             }
             steps {
-                dir('front-end') {
-                    echo '📦 Instalando dependencias...'
-                    sh 'npm install'
-                    echo '🏗️ Generando build...'
-                    sh 'npm run build --if-present'
-                }
+                echo '📦 Instalando dependencias en front-end...'
+                sh 'npm install'
+                sh 'npm run build --if-present'
             }
         }
 
@@ -39,11 +34,12 @@ pipeline {
             agent any 
             steps {
                 script {
+                    // Ya estamos en la carpeta front-end, así que el Dockerfile está aquí mismo
                     if (fileExists('Dockerfile')) {
-                        echo '🐳 Construyendo imagen desde el host...'
+                        echo '🐳 Construyendo imagen usando el Dockerfile local...'
                         sh 'docker build -t frontend-equipo-41:latest .'
                     } else {
-                        echo '❌ No se encontró Dockerfile en la raíz'
+                        error "❌ No se encontró el Dockerfile en ${pwd()}"
                     }
                 }
             }
@@ -51,7 +47,7 @@ pipeline {
     }
 
     post {
-        success { echo '✅ ¡Pipeline exitoso!' }
-        failure { echo '❌ Falló el pipeline.' }
+        success { echo '✅ ¡Pipeline de Front exitoso!' }
+        failure { echo '❌ Falló el pipeline de Front.' }
     }
 }
