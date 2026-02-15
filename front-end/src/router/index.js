@@ -15,11 +15,32 @@ const router = createRouter({
       component: () => import('@/views/HomeView.vue'),
       meta: { requiresAuth: true }
     },
+    // Rutas de Inventario con subrutas
     {
       path: '/inventario',
-      name: 'inventory',
-      component: () => import('@/views/InventoryView.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('@/views/inventory/InventoryLayout.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'inventory-list',
+          component: () => import('@/views/inventory/InventoryList.vue'),
+          meta: { title: 'Listado de Productos' }
+        },
+        {
+          path: 'crear',
+          name: 'inventory-create',
+          component: () => import('@/views/inventory/InventoryCreate.vue'),
+          meta: { title: 'Crear Producto' }
+        },
+        {
+          path: ':id',
+          name: 'inventory-detail',
+          component: () => import('@/views/inventory/InventoryDetail.vue'),
+          meta: { title: 'Detalle de Producto' },
+          props: true
+        }
+      ]
     },
     {
       path: '/ventas',
@@ -40,24 +61,24 @@ const router = createRouter({
   ]
 })
 
-// Navigation guard - verificamos autenticación sin usar el store
-router.beforeEach((to, from, next) => {
+// Navigation guard
+router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.meta.requiresAuth
 
-  if (requiresAuth) {
-    // Verificar si hay token en localStorage o sessionStorage
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
-    
-    if (!token) {
-      next({ name: 'login' })
-      return
-    }
-  }
+  if (requiresAuth || to.name === 'login') {
+    const { useAuthStore } = await import('@/stores/auth')
+    const authStore = useAuthStore()
 
-  // Si está autenticado e intenta ir a login, redirigir a home
-  if (to.name === 'login') {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
-    if (token) {
+    if (requiresAuth && !authStore.isAuthenticated) {
+      const sessionRestored = authStore.restoreSession()
+      
+      if (!sessionRestored) {
+        next({ name: 'login' })
+        return
+      }
+    }
+
+    if (to.name === 'login' && authStore.isAuthenticated) {
       next({ name: 'home' })
       return
     }
