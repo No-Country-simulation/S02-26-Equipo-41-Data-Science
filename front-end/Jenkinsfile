@@ -1,13 +1,12 @@
 pipeline {
-    agent none // Sin agente global para usar uno específico por etapa
+    agent none 
 
-    stages { // <--- Faltaba esta palabra clave para agrupar las etapas
-        
+    stages {
         stage('Install & Build Frontend') {
             agent {
                 docker { 
-                    image 'node:20-alpine'
-                    args '-u root' 
+                    image 'node:20-alpine' 
+                    args '-u root'
                 }
             }
             steps {
@@ -21,19 +20,19 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            agent any // Volvemos al host para usar el comando Docker
+            agent any 
             steps {
                 script {
                     if (fileExists('Dockerfile')) {
                         echo '🐳 Construyendo imagen desde el host...'
                         sh 'docker build -t frontend-equipo-41:latest .'
                     } else {
-                        echo '❌ No se encontró el Dockerfile en la raíz'
+                        echo '❌ No se encontró Dockerfile en la raíz'
                     }
                 }
             }
         }
-    } // Fin de stages
+    }
 
     post {
         success { echo '✅ ¡Pipeline exitoso!' }
