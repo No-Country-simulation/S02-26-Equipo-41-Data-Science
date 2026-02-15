@@ -1,13 +1,12 @@
 pipeline {
     agent {
-        docker {
-            // Imagen DinD que tiene Docker y Node.js
-            image 'docker:24.0.2-dind'
-            args '-u root:root -v /var/lib/jenkins:/var/lib/jenkins -v /var/run/docker.sock:/var/run/docker.sock'
-            reuseNode true
+    docker {
+        image 'docker:24.0.2-dind'
+        args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
 
+    
     environment {
         NODE_ENV = 'development'
     }
