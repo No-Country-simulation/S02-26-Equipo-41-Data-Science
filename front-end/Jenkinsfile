@@ -2,6 +2,7 @@ pipeline {
     agent none 
 
     stages {
+        // --- ETAPA 1: LIMPIEZA DE PERMISOS ---
         stage('Fix Permissions & Cleanup') {
             agent {
                 docker { 
@@ -10,12 +11,14 @@ pipeline {
                 }
             }
             steps {
-                echo '🧹 Limpiando desde la carpeta front-end...'
-                // Al estar dentro de front-end, borramos lo local
-                sh 'rm -rf node_modules .npm || true'
+                dir('front-end') {
+                    echo '🧹 Limpiando node_modules antiguos con permisos de root...'
+                    sh 'rm -rf node_modules .npm || true'
+                }
             }
         }
 
+        // --- ETAPA 2: INSTALACIÓN Y BUILD ---
         stage('Install & Build Frontend') {
             agent {
                 docker { 
@@ -24,22 +27,28 @@ pipeline {
                 }
             }
             steps {
-                echo '📦 Instalando dependencias en front-end...'
-                sh 'npm install'
-                sh 'npm run build --if-present'
+                dir('front-end') {
+                    echo '📦 Instalando dependencias en carpeta front-end...'
+                    sh 'npm install'
+                    echo '🏗️ Ejecutando build si existe el script...'
+                    sh 'npm run build --if-present'
+                }
             }
         }
 
+        // --- ETAPA 3: CONSTRUCCIÓN DE IMAGEN DOCKER ---
         stage('Build Docker Image') {
             agent any 
             steps {
                 script {
-                    // Ya estamos en la carpeta front-end, así que el Dockerfile está aquí mismo
-                    if (fileExists('Dockerfile')) {
-                        echo '🐳 Construyendo imagen usando el Dockerfile local...'
-                        sh 'docker build -t frontend-equipo-41:latest .'
-                    } else {
-                        error "❌ No se encontró el Dockerfile en ${pwd()}"
+                    dir('front-end') {
+                        // Verificamos que el Dockerfile que no quieres tocar esté ahí
+                        if (fileExists('Dockerfile')) {
+                            echo '🐳 Construyendo imagen usando tu Dockerfile original...'
+                            sh 'docker build -t frontend-equipo-41:latest .'
+                        } else {
+                            error "❌ ERROR: No se encontró el Dockerfile en la carpeta front-end/"
+                        }
                     }
                 }
             }
@@ -47,7 +56,11 @@ pipeline {
     }
 
     post {
-        success { echo '✅ ¡Pipeline de Front exitoso!' }
-        failure { echo '❌ Falló el pipeline de Front.' }
+        success {
+            echo '✅ ¡Pipeline finalizado con éxito! La imagen Docker ha sido creada.'
+        }
+        failure {
+            echo '❌ El pipeline falló. Revisa los logs de arriba para ver el error.'
+        }
     }
 }
