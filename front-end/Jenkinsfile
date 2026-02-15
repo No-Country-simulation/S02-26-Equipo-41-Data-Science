@@ -1,0 +1,43 @@
+pipeline {
+    agent {
+        docker {
+            image 'node:20'
+            args '-u root'
+        }
+    }
+
+    stages {
+
+        stage('Install dependencies') {
+            steps {
+                dir('front-end') {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                dir('front-end') {
+                    sh 'npm run lint'
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                dir('front-end') {
+                    sh 'npm run test'
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir('front-end') {
+                    sh 'npm run build'
+                }
+            }
+        }
+    }
+}
