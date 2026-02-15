@@ -1,17 +1,16 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:20'
+            args '-u root'
+        }
+    }
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Install dependencies') {
             steps {
-                dir('frontend') {
+                dir('front-end') {
                     sh 'npm install'
                 }
             }
@@ -19,7 +18,7 @@ pipeline {
 
         stage('Lint') {
             steps {
-                dir('frontend') {
+                dir('front-end') {
                     sh 'npm run lint'
                 }
             }
@@ -27,7 +26,7 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                dir('frontend') {
+                dir('front-end') {
                     sh 'npm run test'
                 }
             }
@@ -35,19 +34,10 @@ pipeline {
 
         stage('Build') {
             steps {
-                dir('frontend') {
+                dir('front-end') {
                     sh 'npm run build'
                 }
             }
-        }
-    }
-
-    post {
-        success {
-            echo "Frontend Vue CI OK en ${env.BRANCH_NAME} ✅"
-        }
-        failure {
-            echo "Frontend Vue CI FALLÓ en ${env.BRANCH_NAME} ❌"
         }
     }
 }
