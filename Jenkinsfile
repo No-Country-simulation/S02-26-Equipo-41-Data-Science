@@ -71,7 +71,7 @@ pipeline {
                     // Ejecuta el nuevo contenedor en el puerto 8081
                     sh 'docker run -d --name frontend-container -p 8081:80 frontend-equipo-41:latest'
                     
-                    echo '✅ Aplicación disponible en: http://localhost:8080'
+                    echo '✅ Aplicación disponible en: http://localhost:8081'
                 }
             }
         }
