@@ -31,13 +31,13 @@ pipeline {
             steps {
                 dir('backend') {
                     echo '🚀 Preparando NestJS Backend...'
+                    // En el futuro aquí agregarás: sh 'npm install && npm run build'
                     echo 'Estructura lista para comandos de NestJS.'
-                    // Aquí podrías agregar npm install y build del backend en el futuro
                 }
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Build & Deploy with Compose') {
             when {
                 expression { 
                     return env.BRANCH_NAME == 'development' || env.BRANCH_NAME == 'main' 
@@ -45,33 +45,18 @@ pipeline {
             }
             steps {
                 script {
-                    dir('front-end') {
-                        if (fileExists('Dockerfile')) {
-                            echo '🛠️ Creando imagen Docker del Frontend...'
-                            sh 'docker build -t frontend-equipo-41:latest .'
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Deploy Frontend') {
-            when {
-                expression { 
-                    return env.BRANCH_NAME == 'development' || env.BRANCH_NAME == 'main' 
-                }
-            }
-            steps {
-                script {
-                    echo '🚀 Desplegando contenedor de Frontend...'
-                    // Detiene y elimina el contenedor anterior si existe para que no falle por nombre duplicado
-                    sh 'docker stop frontend-container || true'
-                    sh 'docker rm frontend-container || true'
+                    echo '🏗️ Usando Docker Compose para construir y desplegar...'
                     
-                    // Ejecuta el nuevo contenedor en el puerto 8081
-                    sh 'docker run -d --name frontend-container -p 8081:80 frontend-equipo-41:latest'
+                    // Detenemos lo que esté corriendo para evitar conflictos de nombres o puertos
+                    sh 'docker compose down || true'
                     
-                    echo '✅ Aplicación disponible en: http://localhost:8081'
+                    // Construimos las imágenes y levantamos los contenedores en segundo plano (-d)
+                    // --build asegura que tome los cambios del nuevo Dockerfile de Nginx
+                    sh 'docker compose up -d --build'
+                    
+                    echo '✅ ¡Sistema desplegado profesionalmente!'
+                    echo '🌍 Frontend: http://localhost:8081'
+                    echo '⚙️ Backend: http://localhost:3000'
                 }
             }
         }

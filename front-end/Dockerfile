@@ -1,17 +1,18 @@
-FROM node:18-slim
-
+# Etapa 1: Construcción (Build)
+FROM node:20-alpine AS build-stage
 WORKDIR /app
-
-# Copiar package.json y package-lock.json
+# Copiamos archivos de dependencias
 COPY package*.json ./
-
-# Instalar dependencias
 RUN npm install
-
-# Copiar el resto del código
+# Copiamos el resto del código y compilamos
 COPY . .
+RUN npm run build
 
-# Exponer puerto por defecto de Vue CLI
-EXPOSE 8080
-
-CMD ["npm", "run", "dev"]
+# Etapa 2: Producción (Servidor Nginx)
+FROM nginx:stable-alpine AS production-stage
+# Copiamos solo los archivos compilados de la etapa anterior a la carpeta de Nginx
+COPY --from=build-stage /app/dist /usr/share/nginx/html
+# Exponemos el puerto 80 del contenedor
+EXPOSE 80
+# Arrancamos Nginx
+CMD ["nginx", "-g", "daemon off;"]
