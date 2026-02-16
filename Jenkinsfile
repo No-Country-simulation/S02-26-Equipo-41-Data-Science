@@ -1,8 +1,7 @@
 pipeline {
-    agent any // Agente global para el orquestador
+    agent any 
 
     stages {
-        // --- SECCIÓN FRONTEND ---
         stage('Frontend: Setup & Build') {
             agent {
                 docker { 
@@ -15,14 +14,13 @@ pipeline {
                     echo '📦 Instalando dependencias de Front...'
                     sh 'npm install'
                     echo '🏗️ Construyendo aplicación Front...'
-                    // Agregamos el "|| true" al lint para que no te frene si hay avisos
+                    // Usamos || true para que el lint no rompa el build si hay warnings
                     sh 'npm run lint || echo "⚠️ Advertencia: Lint falló pero continuamos..." '
                     sh 'npm run build --if-present'
                 }
             }
         }
 
-        // --- SECCIÓN BACKEND (NestJS) ---
         stage('Backend: Setup & Build') {
             agent {
                 docker { 
@@ -33,36 +31,26 @@ pipeline {
             steps {
                 dir('backend') {
                     echo '🚀 Preparando NestJS Backend...'
-                    // sh 'npm install'
-                    // sh 'npm run build'
-                    echo 'Backend listo (descomenta los comandos cuando el equipo los tenga).'
+                    echo 'Estructura lista para comandos de NestJS.'
                 }
             }
         }
 
-        // --- SECCIÓN DOCKER ---
         stage('Build Docker Images') {
+            // Sintaxis universalmente compatible para filtrar ramas
             when {
-                branch anyOf: ['development', 'main']
+                expression { 
+                    return env.BRANCH_NAME == 'development' || env.BRANCH_NAME == 'main' 
+                }
             }
             steps {
                 script {
-                    // Build del Front
                     dir('front-end') {
                         if (fileExists('Dockerfile')) {
                             echo '🐳 Build Image: Frontend'
                             sh 'docker build -t frontend-equipo-41:latest .'
                         }
                     }
-                    // Aquí podrías agregar el build del backend si tiene Dockerfile
-                    /*
-                    dir('backend') {
-                        if (fileExists('Dockerfile')) {
-                            echo '🐳 Build Image: Backend'
-                            sh 'docker build -t backend-equipo-41:latest .'
-                        }
-                    }
-                    */
                 }
             }
         }
