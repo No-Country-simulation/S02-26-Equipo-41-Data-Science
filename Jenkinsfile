@@ -11,33 +11,15 @@ pipeline {
             }
             steps {
                 dir('front-end') {
-                    echo '📦 Instalando dependencias de Front...'
+                    echo '📦 Instalando dependencias...'
                     sh 'npm install'
-                    echo '🏗️ Construyendo aplicación Front...'
-                    // El || true evita que el pipeline se corte si hay errores de estilo (Lint)
-                    sh 'npm run lint || echo "⚠️ Advertencia: Lint falló pero continuamos..." '
+                    echo '🏗️ Construyendo app (Vite)...'
                     sh 'npm run build --if-present'
                 }
             }
         }
 
-        stage('Backend: Setup & Build') {
-            agent {
-                docker { 
-                    image 'node:20-alpine' 
-                    args '-u root'
-                }
-            }
-            steps {
-                dir('backend') {
-                    echo '🚀 Preparando NestJS Backend...'
-                    // En el futuro aquí agregarás: sh 'npm install && npm run build'
-                    echo 'Estructura lista para comandos de NestJS.'
-                }
-            }
-        }
-
-        stage('Build & Deploy with Compose') {
+        stage('Build & Deploy (Manual Mode)') {
             when {
                 expression { 
                     return env.BRANCH_NAME == 'development' || env.BRANCH_NAME == 'main' 
@@ -45,34 +27,36 @@ pipeline {
             }
             steps {
                 script {
-                    echo '🏗️ Usando Docker Compose para construir y desplegar...'
+                    echo '🛠️ Construyendo imagen con Nginx...'
+                    dir('front-end') {
+                        // Construimos la imagen usando el Dockerfile de Nginx que ya creaste
+                        sh 'docker build -t frontend-nginx:latest .'
+                    }
+
+                    echo '🚀 Desplegando contenedor...'
+                    // Limpiamos contenedores viejos
+                    sh 'docker stop frontend-container || true'
+                    sh 'docker rm frontend-container || true'
                     
-                    // Detenemos lo que esté corriendo para evitar conflictos de nombres o puertos
-                    sh 'docker compose down || true'
+                    // IMPORTANTE: Mapeamos el puerto 8081 al 80 (donde escucha Nginx)
+                    sh 'docker run -d --name frontend-container -p 8081:80 frontend-nginx:latest'
                     
-                    // Construimos las imágenes y levantamos los contenedores en segundo plano (-d)
-                    // --build asegura que tome los cambios del nuevo Dockerfile de Nginx
-                    sh 'docker compose up -d --build'
-                    
-                    echo '✅ ¡Sistema desplegado profesionalmente!'
-                    echo '🌍 Frontend: http://localhost:8081'
-                    echo '⚙️ Backend: http://localhost:3000'
+                    echo '✅ ¡Web lista en http://localhost:8081!'
                 }
             }
         }
-    } // Fin de STAGES
+    }
 
     post {
         always {
-            // Limpia el workspace para evitar errores de permisos en futuras ejecuciones
             cleanWs()
             echo '🧹 Workspace limpio.'
         }
         success {
-            echo '🎉 ¡Pipeline finalizado con éxito!'
+            echo '🎉 ¡SUCCESS! Revisa el puerto 8081.'
         }
         failure {
-            echo '❌ El Pipeline falló. Revisar los logs arriba.'
+            echo '❌ Falló. Revisa que el Dockerfile esté en la carpeta front-end.'
         }
-    } // Fin de POST
+    }
 }
