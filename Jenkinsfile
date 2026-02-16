@@ -51,13 +51,12 @@ pipeline {
                 }
             }
         }
-    } // Aquí cierra stages
+    } // Fin de STAGES
 
     post {
         always {
-            // Este comando es el que limpia los permisos de Docker
+            // Limpia el workspace para evitar errores de permisos
             cleanWs()
-        success { echo '✅ Pipeline Global SUCCESS' }
-        failure { echo '❌ Pipeline Global FAILURE' }
-    }
-}
+        }
+    } // Fin de POST
+} // Fin de PIPELINE
