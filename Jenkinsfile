@@ -37,7 +37,6 @@ pipeline {
         }
 
         stage('Build Docker Images') {
-            // Sintaxis universalmente compatible para filtrar ramas
             when {
                 expression { 
                     return env.BRANCH_NAME == 'development' || env.BRANCH_NAME == 'main' 
@@ -47,14 +46,12 @@ pipeline {
                 script {
                     dir('front-end') {
                         if (fileExists('Dockerfile')) {
-                            echo '🐳 Build Image: Frontend'
                             sh 'docker build -t frontend-equipo-41:latest .'
                         }
                     }
                 }
             }
         }
-    }
 
     post {
         success { echo '✅ Pipeline Global SUCCESS' }
