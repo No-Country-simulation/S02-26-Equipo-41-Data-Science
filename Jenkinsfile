@@ -68,8 +68,8 @@ pipeline {
                     sh 'docker stop frontend-container || true'
                     sh 'docker rm frontend-container || true'
                     
-                    // Ejecuta el nuevo contenedor en el puerto 8080
-                    sh 'docker run -d --name frontend-container -p 8080:80 frontend-equipo-41:latest'
+                    // Ejecuta el nuevo contenedor en el puerto 8081
+                    sh 'docker run -d --name frontend-container -p 8081:80 frontend-equipo-41:latest'
                     
                     echo '✅ Aplicación disponible en: http://localhost:8080'
                 }
