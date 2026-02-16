@@ -3,60 +3,59 @@ pipeline {
 
     stages {
         stage('Frontend: Setup & Build') {
-            agent {
-                docker { 
-                    image 'node:20-alpine' 
-                    args '-u root'
-                }
-            }
+            agent { docker { image 'node:20-alpine'; args '-u root' } }
             steps {
                 dir('front-end') {
-                    echo '📦 Instalando dependencias...'
+                    echo '📦 Instalando dependencias Front...'
                     sh 'npm install'
-                    echo '🏗️ Construyendo app (Vite)...'
                     sh 'npm run build --if-present'
                 }
             }
         }
 
-        stage('Build & Deploy (Manual Mode)') {
-            when {
-                expression { 
-                    return env.BRANCH_NAME == 'development' || env.BRANCH_NAME == 'main' 
+        stage('Backend: Setup & Build') {
+            agent { docker { image 'node:20-alpine'; args '-u root' } }
+            steps {
+                dir('backend') {
+                    echo '📦 Instalando dependencias Back...'
+                    sh 'npm install'
+                    // Si tienes tests, podrías agregarlos aquí: sh 'npm test'
                 }
+            }
+        }
+
+        stage('Deploy All') {
+            when {
+                expression { return env.BRANCH_NAME == 'development' || env.BRANCH_NAME == 'main' }
             }
             steps {
                 script {
-                    echo '🛠️ Construyendo imagen con Nginx...'
-                    dir('front-end') {
-                        // Construimos la imagen usando el Dockerfile de Nginx que ya creaste
-                        sh 'docker build -t frontend-nginx:latest .'
-                    }
+                    echo '🛠️ Construyendo imágenes...'
+                    // Build Front
+                    dir('front-end') { sh 'docker build -t frontend-nginx:latest .' }
+                    // Build Back
+                    dir('backend') { sh 'docker build -t backend-api:latest .' }
 
-                    echo '🚀 Desplegando contenedor...'
-                    // Limpiamos contenedores viejos
+                    echo '🚀 Desplegando contenedores...'
+                    
+                    // Reiniciar Front
                     sh 'docker stop frontend-container || true'
                     sh 'docker rm frontend-container || true'
-                    
-                    // IMPORTANTE: Mapeamos el puerto 8081 al 80 (donde escucha Nginx)
                     sh 'docker run -d --name frontend-container -p 8081:80 frontend-nginx:latest'
                     
-                    echo '✅ ¡Web lista en http://localhost:8081!'
+                    // Reiniciar Back
+                    sh 'docker stop backend-container || true'
+                    sh 'docker rm backend-container || true'
+                    sh 'docker run -d --name backend-container -p 3000:3000 backend-api:latest'
+                    
+                    echo '✅ ¡Sistema completo en línea!'
                 }
             }
         }
     }
 
     post {
-        always {
-            cleanWs()
-            echo '🧹 Workspace limpio.'
-        }
-        success {
-            echo '🎉 ¡SUCCESS! Revisa el puerto 8081.'
-        }
-        failure {
-            echo '❌ Falló. Revisa que el Dockerfile esté en la carpeta front-end.'
-        }
+        always { cleanWs(); echo '🧹 Workspace limpio.' }
+        success { echo '🎉 ¡TODO OK! Front: :8081 | Back: :3000' }
     }
 }
