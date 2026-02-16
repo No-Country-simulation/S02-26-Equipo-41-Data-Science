@@ -54,7 +54,10 @@ pipeline {
     } // Aquí cierra stages
 
     post {
+        always {
+            // Este comando es el que limpia los permisos de Docker
+            cleanWs()
         success { echo '✅ Pipeline Global SUCCESS' }
         failure { echo '❌ Pipeline Global FAILURE' }
     }
-} // <--- ESTA es la llave que faltaba
+}
