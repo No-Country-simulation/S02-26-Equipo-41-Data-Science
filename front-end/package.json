@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "npm run test:unit",
     "test:unit": "vitest",
     "lint": "run-s lint:*",
     "lint:oxlint": "oxlint . --fix",
