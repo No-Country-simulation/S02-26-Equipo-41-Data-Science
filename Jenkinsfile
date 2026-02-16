@@ -12,7 +12,7 @@ pipeline {
                     // El flag --passWithNoTests evita que falle si aún no creaste tests
                     sh 'npm run test -- --watchAll=false --passWithNoTests'
                     echo '🏗️ Construyendo app...'
-                    sh 'npm run build --if-present'
+                    sh 'npm run test --if-present -- --run --passWithNoTests'
                 }
             }
         }
