@@ -16,7 +16,7 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Jenkins, por favor frena este deploy');
+      expect(appController.getHello()).toBe('Hello World!');
     });
   });
 });
