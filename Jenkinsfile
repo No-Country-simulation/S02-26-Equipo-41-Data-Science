@@ -9,7 +9,7 @@ pipeline {
                         dir('front-end') {
                             // Limpieza profunda para evitar errores de módulos
                             sh 'npm install'
-                            sh 'npm run test -- --passWithNoTests'
+                            sh 'npx vitest run --passWithNoTests'
                             sh 'npm run build --if-present'
                         }
                     }
