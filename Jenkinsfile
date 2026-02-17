@@ -1,7 +1,6 @@
 pipeline {
     agent any
     
-    // Disparador para que GitHub avise a Jenkins
     triggers {
         githubPush()
     }
@@ -27,12 +26,10 @@ pipeline {
                         }
                     }
                 }
-                // NUEVO: Bloque de Data Science para tu prueba
                 stage('Data Science') {
                     agent { docker { image 'python:3.9-slim' } }
                     steps {
                         script {
-                            // Si aún no creas la carpeta, esto evitará que falle
                             if (fileExists('ml-service')) {
                                 dir('ml-service') {
                                     sh 'pip install -r requirements.txt --quiet'
@@ -47,8 +44,7 @@ pipeline {
             }
         }
 
-        stage('Deploy to DEV') {
-            // Se ejecutará en 'development' O cuando estés probando en 'feature/jenkins'
+        stage('Build & Validate Images') {
             when { 
                 anyOf {
                     branch 'development'
@@ -56,18 +52,33 @@ pipeline {
                 }
             }
             steps {
-                echo "🚀 Desplegando ambiente de prueba desde ${env.BRANCH_NAME}..."
-                sh 'docker-compose build'
+                echo "🚀 Validando construcción de imágenes Docker (manual build)..."
+                script {
+                    // Validamos Backend
+                    dir('backend') {
+                        sh 'docker build -t s02-backend:test .'
+                    }
+                    // Validamos Frontend
+                    dir('front-end') {
+                        sh 'docker build -t s02-frontend:test .'
+                    }
+                    // Validamos ML-Service si existe
+                    if (fileExists('ml-service')) {
+                        dir('ml-service') {
+                            sh 'docker build -t s02-ml:test .'
+                        }
+                    }
+                }
             }
         }
     }
     
     post {
         success {
-            echo "✅ ¡Todo pasó perfectamente! Listo para el Pull Request."
+            echo "✅ ¡Todo pasó perfectamente! Las imágenes construyen y los tests pasaron."
         }
         failure {
-            echo "❌ Algo falló. Revisa los logs arriba. El PR quedará bloqueado."
+            echo "❌ Algo falló. Revisa los logs arriba."
         }
         always {
             cleanWs()
