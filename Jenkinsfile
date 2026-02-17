@@ -30,7 +30,9 @@ pipeline {
                     }
                 }
                 stage('Data Science') {
-                    agent { docker { image 'python:3.9-slim' } }
+                    agent { docker { image 'python:3.9-slim' 
+                            args '-u 0:0'
+                            } }
                     steps {
                         script {
                             if (fileExists('ml-service')) {
