@@ -38,7 +38,7 @@ pipeline {
                             if (fileExists('ml-service')) {
                                 dir('ml-service') {
                                     sh 'pip install -r requirements.txt --quiet'
-                                    sh 'python -m pytests/ || echo "No hay tests definidos o pytest no está instalado'
+                                    sh 'pytest tests/ || echo No_hay_tests_definidos'
                                 }
                             } else {
                                 echo "Pendiente: Crear carpeta ml-service con tests de Python"
