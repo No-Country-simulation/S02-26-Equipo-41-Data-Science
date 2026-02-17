@@ -9,7 +9,9 @@ pipeline {
         stage('Análisis y Tests (CI)') {
             parallel {
                 stage('Frontend') {
-                    agent { docker { image 'node:20-alpine' } }
+                    agent { docker { image 'node:20-alpine' 
+                        args '-u 0:0' } 
+                        }
                     steps {
                         dir('front-end') {
                             sh 'npm install'
@@ -18,7 +20,8 @@ pipeline {
                     }
                 }
                 stage('Backend') {
-                    agent { docker { image 'node:20-alpine' } }
+                    agent { docker { image 'node:20-alpine' 
+                        args '-u 0:0'} }
                     steps {
                         dir('backend') {
                             sh 'npm install'
