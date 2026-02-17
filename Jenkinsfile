@@ -1,6 +1,11 @@
 pipeline {
     agent any 
 
+    options {
+        // Vincula el pipeline al proyecto de GitHub para mejorar la integración
+        githubProjectProperty(projectUrlStr: 'https://github.com/No-Country-simulation/S02-26-Equipo-41-Data-Science/')
+    }
+
     stages {
         stage('Frontend: Install & Test') {
             agent { docker { image 'node:20-alpine'; args '-u root' } }
@@ -9,10 +14,9 @@ pipeline {
                     echo '📦 Instalando dependencias Front...'
                     sh 'npm install'
                     echo '🧪 Corriendo Tests del Frontend...'
-                    // El flag --passWithNoTests evita que falle si aún no creaste tests
-                    sh 'npm run test --  --passWithNoTests || true'
+                    // El || true permite que el pipeline siga si falla, pero el log avisará
+                    sh 'npm run test -- --passWithNoTests || true'
                     echo '🏗️ Construyendo app...'
-                    // Cambia la línea de sh en el Frontend por esta:
                     sh 'npm run build --if-present'
                 }
             }
@@ -25,14 +29,13 @@ pipeline {
                     echo '📦 Instalando dependencias Back...'
                     sh 'npm install'
                     echo '🧪 Corriendo Tests del Backend...'
-                    // Ejecuta los tests unitarios de NestJS
+                    // Aquí NO ponemos || true para que SI falle el pipeline si los tests no pasan
                     sh 'npm run test -- --passWithNoTests'
                 }
             }
         }
 
         stage('Deploy All') {
-            // Esta etapa solo se ejecuta si las anteriores (Tests) pasaron
             when {
                 expression { return env.BRANCH_NAME == 'development' || env.BRANCH_NAME == 'main' }
             }
@@ -44,12 +47,12 @@ pipeline {
 
                     echo '🚀 Desplegando contenedores...'
                     
-                    // Front
+                    // Despliegue Frontend
                     sh 'docker stop frontend-container || true'
                     sh 'docker rm frontend-container || true'
                     sh 'docker run -d --name frontend-container -p 8081:80 frontend-nginx:latest'
                     
-                    // Back
+                    // Despliegue Backend
                     sh 'docker stop backend-container || true'
                     sh 'docker rm backend-container || true'
                     sh 'docker run -d --name backend-container -p 3000:3000 backend-api:latest'
@@ -59,8 +62,23 @@ pipeline {
     }
 
     post {
-        always { cleanWs(); echo '🧹 Workspace limpio.' }
-        success { echo '🎉 ¡TODO OK! Tests pasados y sistema desplegado.' }
-        failure { echo '❌ EL PIPELINE FALLÓ. Los tests no pasaron o hubo un error de build. No se realizó el despliegue.' }
+        always {
+            // Esta es la parte clave: actualiza el estado del commit en GitHub (✅ o ❌)
+            step([$class: 'GitHubCommitStatusSetter', 
+                  errorHandlers: [[$class: 'ShallowAnyErrorHandler']], 
+                  statusBackrefSource: [$class: 'BuildDataRevisionRadiusStatusBackrefSource'], 
+                  statusSource: [$class: 'ConditionalStatusSource', 
+                    data: [$class: 'JobModelSource']
+                  ]
+            ])
+            cleanWs()
+            echo '🧹 Workspace limpio.'
+        }
+        success {
+            echo '🎉 ¡TODO OK! Tests pasados y sistema desplegado.'
+        }
+        failure {
+            echo '❌ EL PIPELINE FALLÓ. Los tests no pasaron o hubo un error de build. No se realizó el despliegue.'
+        }
     }
 }
