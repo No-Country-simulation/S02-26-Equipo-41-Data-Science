@@ -61,24 +61,21 @@ pipeline {
         }
     }
 
-    post {
+post {
         always {
-            // Esta es la parte clave: actualiza el estado del commit en GitHub (✅ o ❌)
+            // Forma simple y robusta de avisar a GitHub
             step([$class: 'GitHubCommitStatusSetter', 
-                  errorHandlers: [[$class: 'ShallowAnyErrorHandler']], 
-                  statusBackrefSource: [$class: 'BuildDataRevisionRadiusStatusBackrefSource'], 
-                  statusSource: [$class: 'ConditionalStatusSource', 
-                    data: [$class: 'JobModelSource']
-                  ]
+                  contextSource: [$class: 'DefaultCommitContextSource', context: 'Jenkins/Build-and-Test'],
+                  statusSource: [$class: 'AnyBuildResultStatusSource']
             ])
             cleanWs()
             echo '🧹 Workspace limpio.'
         }
         success {
-            echo '🎉 ¡TODO OK! Tests pasados y sistema desplegado.'
+            echo '🎉 ¡TODO OK!'
         }
         failure {
-            echo '❌ EL PIPELINE FALLÓ. Los tests no pasaron o hubo un error de build. No se realizó el despliegue.'
+            echo '❌ EL PIPELINE FALLÓ.'
         }
     }
 }
