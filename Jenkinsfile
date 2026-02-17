@@ -57,7 +57,7 @@ pipeline {
             }
             steps {
                 echo "🚀 Desplegando ambiente de prueba desde ${env.BRANCH_NAME}..."
-                sh 'docker compose up -d --build'
+                sh 'docker-compose up -d --build'
             }
         }
     }
