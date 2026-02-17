@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar-container">
+  <nav class="navbar-container mb-4">
     <!-- Logo y navegación principal -->
     <div class="flex items-center gap-8">
       <!-- Logo usando el componente AppLogo (igual que en login) -->
