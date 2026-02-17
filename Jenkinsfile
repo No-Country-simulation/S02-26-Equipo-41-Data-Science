@@ -1,84 +1,88 @@
 pipeline {
-    agent any 
-
-    options {
-        // Vincula el pipeline al proyecto de GitHub para mejorar la integración
-        githubProjectProperty(projectUrlStr: 'https://github.com/No-Country-simulation/S02-26-Equipo-41-Data-Science/')
+    agent any
+    
+    triggers {
+        githubPush()
     }
 
     stages {
-        stage('Frontend: Install & Test') {
-            agent { docker { image 'node:20-alpine'; args '-u root' } }
-            steps {
-                dir('front-end') {
-                    echo '📦 Instalando dependencias Front...'
-                    sh 'npm install'
-                    echo '🧪 Corriendo Tests del Frontend...'
-                    // El || true permite que el pipeline siga si falla, pero el log avisará
-                    sh 'npm run test -- --passWithNoTests || true'
-                    echo '🏗️ Construyendo app...'
-                    sh 'npm run build --if-present'
+        stage('Análisis y Tests (CI)') {
+            parallel {
+                stage('Frontend') {
+                    agent { docker { image 'node:20-alpine' } }
+                    steps {
+                        dir('front-end') {
+                            sh 'npm install'
+                            sh 'npx vitest run --passWithNoTests'
+                        }
+                    }
+                }
+                stage('Backend') {
+                    agent { docker { image 'node:20-alpine' } }
+                    steps {
+                        dir('backend') {
+                            sh 'npm install'
+                            sh 'npm run test -- --passWithNoTests'
+                        }
+                    }
+                }
+                stage('Data Science') {
+                    agent { docker { image 'python:3.9-slim' } }
+                    steps {
+                        script {
+                            if (fileExists('ml-service')) {
+                                dir('ml-service') {
+                                    sh 'pip install -r requirements.txt --quiet'
+                                    sh 'python -m pytest'
+                                }
+                            } else {
+                                echo "Pendiente: Crear carpeta ml-service con tests de Python"
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        stage('Backend: Install & Test') {
-            agent { docker { image 'node:20-alpine'; args '-u root' } }
-            steps {
-                dir('backend') {
-                    echo '📦 Instalando dependencias Back...'
-                    sh 'npm install'
-                    echo '🧪 Corriendo Tests del Backend...'
-                    // Aquí NO ponemos || true para que SI falle el pipeline si los tests no pasan
-                    sh 'npm run test -- --passWithNoTests'
+        stage('Build & Validate Images') {
+            when { 
+                anyOf {
+                    branch 'development'
+                    branch 'feature/jenkins'
                 }
             }
-        }
-
-        stage('Deploy All') {
-            when {
-                expression { return env.BRANCH_NAME == 'development' || env.BRANCH_NAME == 'main' }
-            }
             steps {
+                echo "🚀 Validando construcción de imágenes Docker (manual build)..."
                 script {
-                    echo '🛠️ Construyendo imágenes finales...'
-                    dir('front-end') { sh 'docker build -t frontend-nginx:latest .' }
-                    dir('backend') { sh 'docker build -t backend-api:latest .' }
-
-                    echo '🚀 Desplegando contenedores...'
-                    
-                    // Despliegue Frontend
-                    sh 'docker stop frontend-container || true'
-                    sh 'docker rm frontend-container || true'
-                    sh 'docker run -d --name frontend-container -p 8081:80 frontend-nginx:latest'
-                    
-                    // Despliegue Backend
-                    sh 'docker stop backend-container || true'
-                    sh 'docker rm backend-container || true'
-                    sh 'docker run -d --name backend-container -p 3000:3000 backend-api:latest'
+                    // Validamos Backend
+                    dir('backend') {
+                        sh 'docker build -t s02-backend:test .'
+                    }
+                    // Validamos Frontend
+                    dir('front-end') {
+                        sh 'docker build -t s02-frontend:test .'
+                    }
+                    // Validamos ML-Service si existe
+                    if (fileExists('ml-service')) {
+                        dir('ml-service') {
+                            sh 'docker build -t s02-ml:test .'
+                        }
+                    }
                 }
             }
         }
     }
-
+    
     post {
-        always {
-            // Esta es la parte clave: actualiza el estado del commit en GitHub (✅ o ❌)
-            step([$class: 'GitHubCommitStatusSetter', 
-                  errorHandlers: [[$class: 'ShallowAnyErrorHandler']], 
-                  statusBackrefSource: [$class: 'BuildDataRevisionRadiusStatusBackrefSource'], 
-                  statusSource: [$class: 'ConditionalStatusSource', 
-                    data: [$class: 'JobModelSource']
-                  ]
-            ])
-            cleanWs()
-            echo '🧹 Workspace limpio.'
-        }
         success {
-            echo '🎉 ¡TODO OK! Tests pasados y sistema desplegado.'
+            echo "✅ ¡Todo pasó perfectamente! Las imágenes construyen y los tests pasaron."
         }
         failure {
-            echo '❌ EL PIPELINE FALLÓ. Los tests no pasaron o hubo un error de build. No se realizó el despliegue.'
+            echo "❌ Algo falló. Revisa los logs arriba."
+        }
+        always {
+            cleanWs()
+            echo "Pipeline finalizado en ${env.BRANCH_NAME}"
         }
     }
 }
