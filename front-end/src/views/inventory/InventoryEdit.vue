@@ -67,12 +67,12 @@ const formConfig = createForm()
   // Precios
   .addSection('Precios', 'payments', { columns: 2, background: true })
   .addNumberField('price', 'Precio de Venta', {
-    prefix: '$',
+    prefix: '/S',
     step: 0.01,
     help: 'Este es el precio final para el cliente.'
   })
   .addNumberField('cost', 'Precio de Costo', {
-    prefix: '$',
+    prefix: '/S',
     step: 0.01
   })
 

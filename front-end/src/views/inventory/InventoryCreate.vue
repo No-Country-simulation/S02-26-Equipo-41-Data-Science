@@ -53,21 +53,22 @@ const formConfig = createForm()
   })
 
   // Sección: Precio de Venta
-  .addSection('Precio de Venta', 'sell', { columns: 1, background: true })
+  .addSection('Precio de Venta', 'sell', { columns: 2, background: true })
   .addNumberField('price', 'Precio de Venta', {
     required: true,
     prefix: 'S/',
     step: 0.01,
-    placeholder: '0.00'
+    placeholder: '0.00',
+    defaultValue: ''
+  })
+  .addToggleField('hasInitialStock', '¿Ingresar stock inicial?', {
+    description: 'Activa esta opción para registrar stock al crear el producto'
   })
 
   // Sección: Ingreso Inicial de Stock
   .addSection('Ingreso Inicial de Stock', 'inventory_2', {
     columns: 2,
     description: 'Opcional. Permite registrar el primer ingreso de stock al crear el producto.'
-  })
-  .addToggleField('hasInitialStock', '¿Ingresar stock inicial?', {
-    description: 'Activa esta opción para registrar stock al crear el producto'
   })
   .addNumberField('quantity', 'Cantidad', {
     placeholder: '0'

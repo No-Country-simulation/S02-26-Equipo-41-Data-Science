@@ -82,13 +82,16 @@
                   {{ field.label }}
                   <span v-if="field.required" class="text-red-500">*</span>
                 </label>
-                <div class="relative">
-                  <span
+                
+                <div class="flex relative rounded-lg shadow-sm">
+                  
+                  <div
                     v-if="field.prefix"
-                    class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium"
+                    class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 text-gray-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 font-bold select-none"
                   >
                     {{ field.prefix }}
-                  </span>
+                  </div>
+
                   <input
                     v-model="formData[field.name]"
                     type="number"
@@ -99,19 +102,25 @@
                     :disabled="field.disabled"
                     :required="field.required"
                     :class="[
-                      'input-base',
-                      field.prefix ? 'pl-10' : '',
-                      field.suffix ? 'pr-10' : ''
+                      'block w-full min-w-0 flex-1 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 py-2.5 text-base focus:ring-primary focus:border-primary dark:text-white transition-all focus:z-10',
+                      /* Lógica de bordes redondeados */
+                      field.prefix ? 'rounded-none rounded-r-lg' : 'rounded-lg',
+                      field.suffix ? 'rounded-r-none' : '',
+                      /* Padding estándar */
+                      'px-4'
                     ]"
+                    class="border focus:ring-2"
                   />
-                  <span
+
+                  <div
                     v-if="field.suffix"
-                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium"
+                    class="inline-flex items-center px-3 rounded-r-lg border border-l-0 border-gray-200 bg-gray-50 text-gray-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 font-bold select-none"
                   >
                     {{ field.suffix }}
-                  </span>
+                  </div>
                 </div>
-                <span v-if="field.help" class="text-xs text-gray-500">
+
+                <span v-if="field.help" class="text-xs text-gray-500 dark:text-gray-400">
                   {{ field.help }}
                 </span>
                 <span v-if="errors[field.name]" class="text-xs text-red-500">
