@@ -6,7 +6,6 @@ pipeline {
     }
 
     stages {
-        // NIVEL 1: Unit Tests
         stage('CI: Unit Tests') {
             parallel {
                 stage('Frontend Check') {
@@ -32,7 +31,6 @@ pipeline {
             }
         }
 
-        // NIVEL 2: Integración (Usando un contenedor con Docker Compose)
         stage('CD: Integration Test') {
             when { 
                 anyOf {
@@ -41,28 +39,31 @@ pipeline {
                     branch 'feature/jenkins' 
                 }
             }
-            // Aquí usamos una imagen que SÍ tiene docker compose instalado por defecto
             agent {
                 docker {
                     image 'docker:24-cli'
-                    // Compartimos el socket para que este contenedor pueda mandar órdenes al servidor
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                    // EXPLICACIÓN DE ARGS:
+                    // -u 0:0 -> Ejecuta como root para evitar el "Permission Denied"
+                    // -v /var/run/docker.sock... -> Conecta con el motor Docker del servidor
+                    // -e HOME=... -> Redirige la configuración de docker a una carpeta con permisos
+                    args '-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock -e HOME=/tmp'
                 }
             }
             steps {
-                echo "🚀 Levantando entorno desde contenedor especializado..."
+                echo "🚀 Levantando entorno con permisos de root y bypass de HOME..."
                 script {
-                    // Dentro de esta imagen, 'docker compose' funciona garantizado
+                    // Ahora docker compose podrá crear sus carpetas temporales en /tmp
                     sh 'docker compose up -d --build'
                     
                     try {
+                        echo "🔍 Verificando servicios..."
                         sh 'docker ps'
-                        echo "⏳ Estabilizando..."
                         sh 'sleep 15'
                         echo "✅ Ecosistema validado."
                     } catch (Exception e) {
                         error("Fallo en la validación: ${e.getMessage()}")
                     } finally {
+                        echo "🧹 Limpiando..."
                         sh 'docker compose down'
                     }
                 }
