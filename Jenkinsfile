@@ -48,28 +48,28 @@ pipeline {
                 anyOf {
                     branch 'development'
                     branch 'main'
-                    branch 'feature/jenkins' // Mantenemos esta para que puedas probarlo ahora
+                    branch 'feature/jenkins' 
                 }
             }
             steps {
-                echo "🚀 Iniciando entorno integrado con docker-compose.app..."
+                echo "🚀 Iniciando entorno integrado con docker compose V2..."
                 script {
-                    // Levantamos Front, Back y la DB de tu compañero
-                    sh 'docker-compose -f docker-compose.app up -d --build'
+                    // SINTAXIS CORREGIDA: docker compose (con espacio, sin guion)
+                    // Asegúrate de que el archivo se llame exactamente docker-compose.app en la raíz
+                    sh 'docker compose -f docker-compose.app up -d --build'
                     
                     try {
                         echo "🔍 Verificando que los servicios estén activos..."
                         sh 'docker ps'
                         
-                        // Damos 10 segundos para que Postgres termine de arrancar
-                        sh 'sleep 10'
+                        echo "⏳ Esperando a que la base de datos esté lista..."
+                        sh 'sleep 15'
                         
                         echo "✅ Ecosistema validado y conectado."
                     } catch (Exception e) {
                         echo "❌ Error durante la integración: ${e.getMessage()}"
                         error("Prueba de integración fallida")
                     } finally {
-                        // Limpieza obligatoria para no agotar recursos
                         echo "🧹 Bajando contenedores de prueba..."
                         sh 'docker compose -f docker-compose.app down'
                     }
@@ -82,7 +82,7 @@ pipeline {
             when { branch 'main' }
             steps {
                 echo "📦 Publicando imágenes oficiales y preparando deploy..."
-                sh 'echo "Aquí irían los comandos de push a Docker Hub o despliegue final"'
+                sh 'echo "Simulando push a registro de imágenes"'
             }
         }
     }
@@ -101,7 +101,6 @@ pipeline {
             echo "❌ El pipeline falló en la rama ${env.BRANCH_NAME}. Revisa los logs."
         }
         always {
-            // Borramos el workspace para evitar problemas de permisos de archivos
             cleanWs deleteDirs: true, disableDeferredWipeout: true
         }
     }
