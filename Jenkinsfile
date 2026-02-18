@@ -9,9 +9,13 @@ pipeline {
         stage('Análisis y Tests (CI)') {
             parallel {
                 stage('Frontend') {
-                    // Solo corre si hay cambios en la carpeta front-end
                     when { changeset "front-end/**" }
-                    agent { docker { image 'node:20-alpine' args '-u 0:0' } }
+                    agent { 
+                        docker { 
+                            image 'node:20-alpine'
+                            args '-u 0:0' 
+                        } 
+                    }
                     steps {
                         dir('front-end') {
                             sh 'npm install'
@@ -20,9 +24,13 @@ pipeline {
                     }
                 }
                 stage('Backend') {
-                    // Solo corre si hay cambios en la carpeta backend
                     when { changeset "backend/**" }
-                    agent { docker { image 'node:20-alpine' args '-u 0:0' } }
+                    agent { 
+                        docker { 
+                            image 'node:20-alpine'
+                            args '-u 0:0' 
+                        } 
+                    }
                     steps {
                         dir('backend') {
                             sh 'npm install'
@@ -43,11 +51,9 @@ pipeline {
             steps {
                 echo "🚀 Validando construcción de imágenes Docker..."
                 script {
-                    // Validamos Backend
                     dir('backend') {
                         sh 'docker build -t s02-backend:test .'
                     }
-                    // Validamos Frontend
                     dir('front-end') {
                         sh 'docker build -t s02-frontend:test .'
                     }
@@ -58,7 +64,7 @@ pipeline {
     
     post {
         success {
-            echo "✅ ¡Todo pasó perfectamente! Frontend y Backend están validados."
+            echo "✅ ¡Todo pasó perfectamente!"
         }
         failure {
             echo "❌ Algo falló. Revisa los logs arriba."
