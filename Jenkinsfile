@@ -32,7 +32,7 @@ pipeline {
             }
         }
 
-        // NIVEL 2: Integración (Ahora encontrará el archivo automáticamente)
+        // NIVEL 2: Integración (Con compatibilidad híbrida)
         stage('CD: Integration Test') {
             when { 
                 anyOf {
@@ -42,25 +42,31 @@ pipeline {
                 }
             }
             steps {
-                echo "🚀 Iniciando integración con el nuevo estándar docker-compose.yml..."
+                echo "🚀 Iniciando fase de integración..."
                 script {
-                    // Comando limpio: sin parámetros de archivo que den error
-                    sh 'docker compose up -d --build'
+                    try {
+                        // Intentamos el comando moderno. Si falla por los flags, saltará al catch.
+                        echo "Intentando con 'docker compose'..."
+                        sh 'docker compose up -d --build'
+                    } catch (Exception e) {
+                        echo "⚠️ 'docker compose' falló o no reconoce flags. Intentando con 'docker-compose'..."
+                        // Intentamos la versión antigua (con guion) que suele ser más estable con los flags
+                        sh 'docker-compose up -d --build'
+                    }
                     
                     try {
-                        echo "🔍 Verificando servicios levantados..."
+                        echo "🔍 Verificando estado de los servicios..."
                         sh 'docker ps'
-                        
-                        echo "⏳ Esperando 15s para estabilización de base de datos..."
+                        echo "⏳ Esperando 15 segundos para estabilización..."
                         sh 'sleep 15'
-                        
-                        echo "✅ Ecosistema validado correctamente."
+                        echo "✅ Ecosistema validado."
                     } catch (Exception e) {
-                        echo "❌ Error detectado: ${e.getMessage()}"
-                        error("Fallo en la prueba de integración")
+                        echo "❌ Error durante la verificación: ${e.getMessage()}"
+                        error("La aplicación no inició correctamente.")
                     } finally {
-                        echo "🧹 Limpiando contenedores de prueba..."
-                        sh 'docker compose down'
+                        echo "🧹 Limpiando entorno de prueba..."
+                        // Intentamos apagar con ambos métodos por seguridad
+                        sh 'docker compose down || docker-compose down'
                     }
                 }
             }
@@ -69,17 +75,17 @@ pipeline {
         stage('PROD: Release') {
             when { branch 'main' }
             steps {
-                echo "📦 Rama Main detectada. Preparando despliegue final..."
+                echo "📦 Rama principal detectada. Preparando despliegue de producción..."
             }
         }
     }
     
     post {
         success {
-            echo "🏆 ¡TODO VERDE! La rama ${env.BRANCH_NAME} pasó todas las pruebas."
+            echo "🏆 ¡ÉXITO! El pipeline de la rama ${env.BRANCH_NAME} ha finalizado correctamente."
         }
         failure {
-            echo "❌ Algo salió mal. Revisa el log de 'docker ps' más arriba."
+            echo "❌ El pipeline falló. Revisa los logs de error de Docker arriba."
         }
         always {
             cleanWs deleteDirs: true, disableDeferredWipeout: true
