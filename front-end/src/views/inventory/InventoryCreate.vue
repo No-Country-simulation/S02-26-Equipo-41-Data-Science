@@ -62,13 +62,15 @@ const formConfig = createForm()
     defaultValue: ''
   })
   .addToggleField('hasInitialStock', '¿Ingresar stock inicial?', {
-    description: 'Activa esta opción para registrar stock al crear el producto'
+    description: 'Activa esta opción para registrar stock al crear el producto',
+    defaultValue: false // Importante definir un valor por defecto
   })
 
   // Sección: Ingreso Inicial de Stock
   .addSection('Ingreso Inicial de Stock', 'inventory_2', {
     columns: 2,
-    description: 'Opcional. Permite registrar el primer ingreso de stock al crear el producto.'
+    description: 'Opcional. Permite registrar el primer ingreso de stock al crear el producto.',
+    condition: (data) => data.hasInitialStock === true
   })
   .addNumberField('quantity', 'Cantidad', {
     placeholder: '0'

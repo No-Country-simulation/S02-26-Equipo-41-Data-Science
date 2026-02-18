@@ -56,7 +56,8 @@ export class FormBuilder {
       fields: [],
       columns: options.columns || 2,
       divider: options.divider !== false,
-      background: options.background || false
+      background: options.background || false,
+      condition: options.condition || null
     }
     this.config.sections.push(this.currentSection)
     return this

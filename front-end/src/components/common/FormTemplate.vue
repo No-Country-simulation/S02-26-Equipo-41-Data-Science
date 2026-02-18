@@ -21,7 +21,7 @@
           section.background ? 'bg-gray-50/50 dark:bg-gray-900/20' : ''
         ]"
       >
-        <div class="p-6 md:p-8">
+        <div v-if="shouldShowSection(section)" class="p-6 md:p-8">
           <!-- Título de la sección -->
           <div class="flex items-center gap-3 mb-6">
             <span class="material-symbols-outlined text-primary text-2xl">
@@ -437,12 +437,21 @@ const handleFileChange = (fieldName, event) => {
   }
 }
 
+// Helper para verificar visibilidad
+const shouldShowSection = (section) => {
+  // Si no hay condición definida, mostrar siempre
+  if (!section.condition) return true
+  // Si hay condición, ejecutarla pasando el formData reactivo
+  return section.condition(formData)
+}
+
 // Validar formulario
 const validateForm = () => {
   let isValid = true
   Object.keys(errors).forEach(key => delete errors[key])
 
   props.config.sections.forEach(section => {
+    if (!shouldShowSection(section)) return
     section.fields.forEach(field => {
       if (field.required && !formData[field.name]) {
         errors[field.name] = `${field.label} es requerido`
