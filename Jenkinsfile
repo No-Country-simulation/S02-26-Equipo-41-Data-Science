@@ -6,7 +6,7 @@ pipeline {
     }
 
     stages {
-        // NIVEL 1: Análisis y Tests Unitarios (Paralelo)
+        // NIVEL 1: Análisis y Tests Unitarios
         stage('CI: Unit Tests') {
             parallel {
                 stage('Frontend Check') {
@@ -42,7 +42,7 @@ pipeline {
             }
         }
 
-        // NIVEL 2: Integración (Usando el archivo específico de la App)
+        // NIVEL 2: Integración (Usando docker-compose con guion)
         stage('CD: Integration Test') {
             when { 
                 anyOf {
@@ -52,16 +52,17 @@ pipeline {
                 }
             }
             steps {
-                echo "🚀 Iniciando aplicación con: docker-compose.app.ym"
+                echo "🚀 Iniciando aplicación con el ejecutable docker-compose..."
                 script {
-                    // SINTAXIS V2: El flag -f va DESPUÉS de 'compose'
-                    sh 'docker compose -f docker-compose.app.ym up -d --build'
+                    // CAMBIO CLAVE: docker-compose (con guion)
+                    // Esto separa el comando del binario principal de Docker
+                    sh 'docker-compose -f docker-compose.app.ym up -d --build'
                     
                     try {
                         echo "🔍 Verificando servicios en ejecución..."
                         sh 'docker ps'
                         
-                        echo "⏳ Esperando estabilización del entorno (15s)..."
+                        echo "⏳ Esperando 15s para estabilización..."
                         sh 'sleep 15'
                         
                         echo "✅ Ecosistema de aplicación validado."
@@ -69,19 +70,17 @@ pipeline {
                         echo "❌ Error en la integración: ${e.getMessage()}"
                         error("Fallo en la prueba de integración")
                     } finally {
-                        echo "🧹 Bajando contenedores de la aplicación..."
-                        sh 'docker compose -f docker-compose.app.ym down'
+                        echo "🧹 Bajando contenedores con docker-compose..."
+                        sh 'docker-compose -f docker-compose.app.ym down'
                     }
                 }
             }
         }
 
-        // NIVEL 3: Release (Solo para Main)
         stage('PROD: Release') {
             when { branch 'main' }
             steps {
-                echo "📦 Preparando imágenes oficiales para producción..."
-                sh 'echo "Pushing images to registry..."'
+                echo "📦 Preparando imágenes oficiales..."
             }
         }
     }
@@ -92,15 +91,14 @@ pipeline {
                 if (env.BRANCH_NAME == 'main') {
                     echo "🏆 DESPLIEGUE EXITOSO EN PRODUCCIÓN"
                 } else {
-                    echo "✅ Rama ${env.BRANCH_NAME} verificada correctamente."
+                    echo "✅ Rama ${env.BRANCH_NAME} verificada."
                 }
             }
         }
         failure {
-            echo "❌ Fallo en el pipeline de la rama ${env.BRANCH_NAME}. Revisa los logs de Docker."
+            echo "❌ El pipeline falló. Probando compatibilidad de comandos."
         }
         always {
-            // Limpieza del espacio de trabajo
             cleanWs deleteDirs: true, disableDeferredWipeout: true
         }
     }
