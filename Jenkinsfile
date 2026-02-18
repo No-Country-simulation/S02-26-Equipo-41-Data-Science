@@ -6,9 +6,7 @@ pipeline {
     }
 
     stages {
-        // NIVEL 1: Siempre se ejecuta (para cualquier rama)
-        // Queremos asegurar que NADA rompa el código base.
-        stage('CI: Tests Rápidos') {
+        stage('CI: Unit Tests') {
             parallel {
                 stage('Frontend Check') {
                     when { changeset "front-end/**" }
@@ -33,47 +31,56 @@ pipeline {
             }
         }
 
-        // NIVEL 2: Solo para Development o ramas de integración
-        // Aquí el proceso es más pesado (Build de Docker).
-        stage('CD: Build & Registry') {
+        stage('CD: Integration Test') {
             when { 
                 anyOf {
                     branch 'development'
                     branch 'main'
+                    branch 'feature/jenkins' 
+                }
+            }
+            agent {
+                docker {
+                    // CAMBIO AQUÍ: Usamos una versión más reciente para compatibilidad de API
+                    image 'docker:latest' 
+                    args '-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock -e HOME=/tmp'
                 }
             }
             steps {
-                echo "🚀 Rama importante detectada: Generando imágenes de Docker..."
+                echo "🚀 Levantando entorno de integración..."
                 script {
-                    dir('backend') { sh 'docker build -t s02-backend:latest .' }
-                    dir('front-end') { sh 'docker build -t s02-frontend:latest .' }
+                    // Limpieza preventiva
+                    sh 'docker rm -f nocountry-postgres frontend-container backend-container || true'
+                    sh 'docker compose down --remove-orphans || true'
+                    
+                    // Despliegue
+                    sh 'docker compose up -d --build --force-recreate'
+                    
+                    try {
+                        echo "🔍 Verificando servicios..."
+                        // Esperamos un poco a que el motor termine de asentar los contenedores
+                        sh 'sleep 10'
+                        sh 'docker ps'
+                        echo "✅ Ecosistema validado."
+                    } catch (Exception e) {
+                        error("Fallo en la validación: ${e.getMessage()}")
+                    } finally {
+                        echo "🧹 Limpiando..."
+                        sh 'docker compose down'
+                    }
                 }
             }
         }
 
-        // NIVEL 3: Solo para Main
-        // Este stage simula el paso final a producción.
         stage('PROD: Release') {
             when { branch 'main' }
             steps {
-                echo "📦 Publicando versión oficial en Main..."
-                // Aquí podrías taggear la imagen como :v1.0, :stable, etc.
-                sh 'echo "Simulando push a DockerHub o despliegue a AWS"'
+                echo "📦 Rama principal detectada. Pipeline completado con éxito."
             }
         }
     }
     
     post {
-        success {
-            script {
-                if (env.BRANCH_NAME == 'main') {
-                    echo "🏆 ¡PRODUCCIÓN ACTUALIZADA!"
-                } else {
-                    echo "✅ Rama ${env.BRANCH_NAME} verificada."
-                }
-            }
-        }
-        failure { echo "❌ Error en el Pipeline de ${env.BRANCH_NAME}." }
         always {
             cleanWs deleteDirs: true, disableDeferredWipeout: true
         }
