@@ -7,6 +7,7 @@
 
     <!-- Contenido del producto -->
     <div v-else-if="product" class="space-y-6">
+      <BaseBreadcrumb :items="breadcrumbItems" />
       <!-- Header con acciones -->
       <div class="flex items-center justify-between">
         <div>
@@ -193,7 +194,9 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import BaseButton from '@/components/common/BaseButton.vue'
+import BaseBreadcrumb from '@/components/common/BaseBreadcrumb.vue'
 import { useInventoryStore } from '@/stores/inventory'
+import { inventoryBreadcrumbs } from '@/utils/breadcrumbs'
 
 const props = defineProps({
   id: {
@@ -205,6 +208,7 @@ const props = defineProps({
 const router = useRouter()
 const route = useRoute()
 const inventoryStore = useInventoryStore()
+const breadcrumbItems = inventoryBreadcrumbs.detail(props.id)
 
 const product = ref(null)
 const loading = ref(true)
