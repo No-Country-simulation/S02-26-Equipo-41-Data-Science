@@ -5,6 +5,7 @@ export const useInventoryStore = defineStore('inventory', () => {
   // State
   const products = ref([])
   const loading = ref(false)
+  const error = ref(null)
 
   // Getters
   const stats = computed(() => {
@@ -24,6 +25,7 @@ export const useInventoryStore = defineStore('inventory', () => {
   // Actions
   async function fetchProducts() {
     loading.value = true
+    error.value = null
     try {
       // Simulación de API call - Reemplazar con llamada real
       await new Promise(resolve => setTimeout(resolve, 500))
@@ -40,6 +42,8 @@ export const useInventoryStore = defineStore('inventory', () => {
           price: 249.90,
           cost: 150.00,
           stock: 42,
+          minStock: 10,
+          status: 'active',
           image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400'
         },
         {
@@ -52,6 +56,8 @@ export const useInventoryStore = defineStore('inventory', () => {
           price: 45.00,
           cost: 25.00,
           stock: 3,
+          minStock: 5,
+          status: 'active',
           image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400'
         },
         {
@@ -64,6 +70,8 @@ export const useInventoryStore = defineStore('inventory', () => {
           price: 120.00,
           cost: 70.00,
           stock: 0,
+          minStock: 3,
+          status: 'active',
           image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400'
         },
         {
@@ -76,12 +84,15 @@ export const useInventoryStore = defineStore('inventory', () => {
           price: 385.50,
           cost: 250.00,
           stock: 9,
+          minStock: 10,
+          status: 'active',
           image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=400'
         }
       ]
-    } catch (error) {
-      console.error('Error fetching products:', error)
-      throw error
+    } catch (err) {
+      error.value = err.message
+      console.error('Error fetching products:', err)
+      throw err
     } finally {
       loading.value = false
     }
@@ -100,47 +111,102 @@ export const useInventoryStore = defineStore('inventory', () => {
     return product || null
   }
 
+  /**
+   * MEJORADO: Crear producto con validación de campos
+   * Acepta datos del FormTemplate directamente
+   */
   async function createProduct(productData) {
+    loading.value = true
+    error.value = null
+    
     try {
       // Simulación de API call
       await new Promise(resolve => setTimeout(resolve, 500))
       
+      // Preparar datos del producto
       const newProduct = {
         id: Math.max(...products.value.map(p => p.id), 0) + 1,
-        ...productData,
-        createdAt: new Date().toISOString()
+        sku: productData.sku || generateSKU(),
+        name: productData.name,
+        category: productData.category,
+        brand: productData.brand || '',
+        description: productData.description || '',
+        price: parseFloat(productData.price) || 0,
+        cost: parseFloat(productData.cost) || 0,
+        stock: parseInt(productData.quantity) || 0,
+        minStock: parseInt(productData.minStock) || 10,
+        status: productData.status || 'active',
+        image: productData.image || null,
+        // Metadatos
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      
+      // Si hay información de stock inicial, registrarla
+      if (productData.hasInitialStock && productData.quantity) {
+        newProduct.initialStock = {
+          quantity: parseInt(productData.quantity),
+          cost: parseFloat(productData.cost),
+          supplier: productData.supplier || '',
+          date: productData.date || new Date().toISOString().split('T')[0],
+          note: productData.note || ''
+        }
       }
       
       products.value.push(newProduct)
       return newProduct
-    } catch (error) {
-      console.error('Error creating product:', error)
-      throw error
+    } catch (err) {
+      error.value = err.message
+      console.error('Error creating product:', err)
+      throw err
+    } finally {
+      loading.value = false
     }
   }
 
+  /**
+   * MEJORADO: Actualizar producto
+   * Acepta datos del FormTemplate directamente
+   */
   async function updateProduct(id, productData) {
+    loading.value = true
+    error.value = null
+    
     try {
       // Simulación de API call
       await new Promise(resolve => setTimeout(resolve, 500))
       
       const index = products.value.findIndex(p => p.id == id)
-      if (index !== -1) {
-        products.value[index] = {
-          ...products.value[index],
-          ...productData,
-          updatedAt: new Date().toISOString()
-        }
-        return products.value[index]
+      if (index === -1) {
+        throw new Error('Producto no encontrado')
       }
-      throw new Error('Product not found')
-    } catch (error) {
-      console.error('Error updating product:', error)
-      throw error
+
+      // Actualizar solo los campos proporcionados
+      const updatedProduct = {
+        ...products.value[index],
+        ...productData,
+        // Asegurar tipos de datos correctos
+        price: productData.price !== undefined ? parseFloat(productData.price) : products.value[index].price,
+        cost: productData.cost !== undefined ? parseFloat(productData.cost) : products.value[index].cost,
+        minStock: productData.minStock !== undefined ? parseInt(productData.minStock) : products.value[index].minStock,
+        updatedAt: new Date().toISOString()
+      }
+      
+      products.value[index] = updatedProduct
+      return updatedProduct
+    } catch (err) {
+      error.value = err.message
+      console.error('Error updating product:', err)
+      throw err
+    } finally {
+      loading.value = false
     }
   }
 
   async function deleteProduct(id) {
+    loading.value = true
+    error.value = null
+    
     try {
       // Simulación de API call
       await new Promise(resolve => setTimeout(resolve, 500))
@@ -151,9 +217,12 @@ export const useInventoryStore = defineStore('inventory', () => {
         return true
       }
       return false
-    } catch (error) {
-      console.error('Error deleting product:', error)
-      throw error
+    } catch (err) {
+      error.value = err.message
+      console.error('Error deleting product:', err)
+      throw err
+    } finally {
+      loading.value = false
     }
   }
 
@@ -214,15 +283,49 @@ export const useInventoryStore = defineStore('inventory', () => {
     return result
   }
 
+  /**
+   * NUEVO: Validar SKU único
+   */
+  function isSkuUnique(sku, excludeId = null) {
+    return !products.value.some(p => 
+      p.sku.toLowerCase() === sku.toLowerCase() && p.id !== excludeId
+    )
+  }
+
+  /**
+   * NUEVO: Generar SKU automático
+   */
+  function generateSKU() {
+    const prefix = 'PRD'
+    const timestamp = Date.now().toString().slice(-6)
+    return `${prefix}-${timestamp}`
+  }
+
+  /**
+   * NUEVO: Limpiar errores
+   */
+  function clearError() {
+    error.value = null
+  }
+
   return {
+    // State
     products,
     loading,
+    error,
+    
+    // Getters
     stats,
+    
+    // Actions
     fetchProducts,
     getProductById,
     createProduct,
     updateProduct,
     deleteProduct,
-    getFilteredProducts
+    getFilteredProducts,
+    isSkuUnique,
+    generateSKU,
+    clearError
   }
 })

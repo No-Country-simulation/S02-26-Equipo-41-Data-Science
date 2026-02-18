@@ -10,12 +10,15 @@
         <component :is="Component" :key="route.path" />
       </transition>
     </router-view>
+
+    <div class="fixed bottom-6 right-6 z-50">
+      <ThemeToggle />
+    </div>
 </template>
 
 <script setup>
 import AppNavbar from '@/components/common/AppNavbar.vue';
-
-
+import ThemeToggle from '@/components/common/ThemeToggle.vue';
 </script>
 
 <style scoped>
