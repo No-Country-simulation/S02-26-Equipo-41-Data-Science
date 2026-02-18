@@ -55,7 +55,7 @@ pipeline {
                 echo "🚀 Iniciando entorno integrado con docker-compose.app..."
                 script {
                     // Levantamos Front, Back y la DB de tu compañero
-                    sh 'docker compose -f docker-compose.app up -d --build'
+                    sh 'docker-compose -f docker-compose.app up -d --build'
                     
                     try {
                         echo "🔍 Verificando que los servicios estén activos..."
