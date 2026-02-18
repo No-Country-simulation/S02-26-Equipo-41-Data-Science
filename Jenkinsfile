@@ -62,16 +62,17 @@ pipeline {
         }
     }
     
-        post {
-            success {
-                echo "✅ ¡Todo pasó perfectamente!"
-            }
+    post {
+        success {
+            echo "✅ ¡Todo pasó perfectamente!"
+        }
         failure {
             echo "❌ Algo falló. Revisa los logs arriba."
         }
         always {
-            // Usamos una opción para ignorar errores si no puede borrar algo
-            cleanWs(deleteDirs: true, disableDeferredWipeout: true)
+            // Limpieza robusta para evitar errores de permisos en Windows/Docker
+            cleanWs deleteDirs: true, disableDeferredWipeout: true
             echo "Pipeline finalizado en ${env.BRANCH_NAME}"
         }
+    }
 }
