@@ -32,7 +32,7 @@ pipeline {
             }
         }
 
-        // NIVEL 2: Integración (Con compatibilidad híbrida)
+        // NIVEL 2: Integración (Usando un contenedor con Docker Compose)
         stage('CD: Integration Test') {
             when { 
                 anyOf {
@@ -41,32 +41,29 @@ pipeline {
                     branch 'feature/jenkins' 
                 }
             }
+            // Aquí usamos una imagen que SÍ tiene docker compose instalado por defecto
+            agent {
+                docker {
+                    image 'docker:24-cli'
+                    // Compartimos el socket para que este contenedor pueda mandar órdenes al servidor
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             steps {
-                echo "🚀 Iniciando fase de integración..."
+                echo "🚀 Levantando entorno desde contenedor especializado..."
                 script {
-                    try {
-                        // Intentamos el comando moderno. Si falla por los flags, saltará al catch.
-                        echo "Intentando con 'docker compose'..."
-                        sh 'docker compose up -d --build'
-                    } catch (Exception e) {
-                        echo "⚠️ 'docker compose' falló o no reconoce flags. Intentando con 'docker-compose'..."
-                        // Intentamos la versión antigua (con guion) que suele ser más estable con los flags
-                        sh 'docker-compose up -d --build'
-                    }
+                    // Dentro de esta imagen, 'docker compose' funciona garantizado
+                    sh 'docker compose up -d --build'
                     
                     try {
-                        echo "🔍 Verificando estado de los servicios..."
                         sh 'docker ps'
-                        echo "⏳ Esperando 15 segundos para estabilización..."
+                        echo "⏳ Estabilizando..."
                         sh 'sleep 15'
                         echo "✅ Ecosistema validado."
                     } catch (Exception e) {
-                        echo "❌ Error durante la verificación: ${e.getMessage()}"
-                        error("La aplicación no inició correctamente.")
+                        error("Fallo en la validación: ${e.getMessage()}")
                     } finally {
-                        echo "🧹 Limpiando entorno de prueba..."
-                        // Intentamos apagar con ambos métodos por seguridad
-                        sh 'docker compose down || docker-compose down'
+                        sh 'docker compose down'
                     }
                 }
             }
@@ -75,18 +72,12 @@ pipeline {
         stage('PROD: Release') {
             when { branch 'main' }
             steps {
-                echo "📦 Rama principal detectada. Preparando despliegue de producción..."
+                echo "📦 Rama principal detectada."
             }
         }
     }
     
     post {
-        success {
-            echo "🏆 ¡ÉXITO! El pipeline de la rama ${env.BRANCH_NAME} ha finalizado correctamente."
-        }
-        failure {
-            echo "❌ El pipeline falló. Revisa los logs de error de Docker arriba."
-        }
         always {
             cleanWs deleteDirs: true, disableDeferredWipeout: true
         }
