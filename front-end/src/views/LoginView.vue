@@ -19,7 +19,7 @@
 
     <!-- Right Side: Login Form -->
     <div class="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 bg-white dark:bg-background-dark">
-      <div class="w-full max-w-[440px] flex flex-col gap-8 animate-fade-in">
+      <div class="w-full max-w-[440px] flex flex-col gap-8">
         <!-- Branding -->
         <div class="flex flex-col items-center lg:items-start gap-2">
           <AppLogo class="mb-2" />
@@ -60,16 +60,10 @@
         </div>
       </div>
     </div>
-
-    <!-- Theme Toggle -->
-    <div class="fixed bottom-6 right-6 z-50">
-      <ThemeToggle />
-    </div>
   </main>
 </template>
 
 <script setup>
 import AppLogo from '@/components/common/AppLogo.vue'
-import ThemeToggle from '@/components/common/ThemeToggle.vue'
 import LoginForm from '@/components/auth/LoginForm.vue'
 </script>

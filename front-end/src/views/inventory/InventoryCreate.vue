@@ -1,13 +1,7 @@
 <template>
   <div class="max-w-4xl mx-auto px-8 pb-8">
     <!-- Back button -->
-    <router-link
-      to="/inventario"
-      class="flex items-center gap-1 text-primary text-sm font-semibold mb-6 hover:underline"
-    >
-      <span class="material-symbols-outlined text-sm">arrow_back</span>
-      Volver al inventario
-    </router-link>
+    <BaseBreadcrumb :items="breadcrumbItems" />
 
     <!-- Form using FormTemplate -->
     <FormTemplate
@@ -21,11 +15,15 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import FormTemplate from '@/components/common/FormTemplate.vue'
+import BaseBreadcrumb from '@/components/common/BaseBreadcrumb.vue'
 import { createForm } from '@/utils/FormBuilder'
 import { useInventoryStore } from '@/stores/inventory'
+import { inventoryBreadcrumbs } from '@/utils/breadcrumbs'
+
 
 const router = useRouter()
 const inventoryStore = useInventoryStore()
+const breadcrumbItems = inventoryBreadcrumbs.create()
 
 // Configuración del formulario usando Builder
 const formConfig = createForm()
