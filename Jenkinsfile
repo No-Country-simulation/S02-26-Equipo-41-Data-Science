@@ -6,7 +6,7 @@ pipeline {
     }
 
     stages {
-        // NIVEL 1: Análisis y Tests Unitarios (Se ejecuta para TODAS las ramas)
+        // NIVEL 1: Análisis y Tests Unitarios
         stage('CI: Unit Tests') {
             parallel {
                 stage('Frontend Check') {
@@ -42,7 +42,7 @@ pipeline {
             }
         }
 
-        // NIVEL 2: Integración con Base de Datos (Solo Development y Main)
+        // NIVEL 2: Integración (Usando tu archivo .ym corregido)
         stage('CD: Integration Test') {
             when { 
                 anyOf {
@@ -52,37 +52,35 @@ pipeline {
                 }
             }
             steps {
-                echo "🚀 Iniciando entorno integrado con docker compose V2..."
+                echo "🚀 Iniciando entorno con: docker-compose.app.ym"
                 script {
-                    // SINTAXIS CORREGIDA: docker compose (con espacio, sin guion)
-                    // Asegúrate de que el archivo se llame exactamente docker-compose.app en la raíz
-                    sh 'docker compose -f docker-compose.app up -d --build'
+                    // Usamos --file para máxima compatibilidad con tu versión de Docker
+                    sh 'docker compose --file docker-compose.app.ym up -d --build'
                     
                     try {
-                        echo "🔍 Verificando que los servicios estén activos..."
+                        echo "🔍 Verificando servicios..."
                         sh 'docker ps'
                         
-                        echo "⏳ Esperando a que la base de datos esté lista..."
+                        echo "⏳ Esperando 15s para que la base de datos inicie..."
                         sh 'sleep 15'
                         
-                        echo "✅ Ecosistema validado y conectado."
+                        echo "✅ Ecosistema validado."
                     } catch (Exception e) {
-                        echo "❌ Error durante la integración: ${e.getMessage()}"
-                        error("Prueba de integración fallida")
+                        echo "❌ Error: ${e.getMessage()}"
+                        error("Fallo en la prueba de integración")
                     } finally {
-                        echo "🧹 Bajando contenedores de prueba..."
-                        sh 'docker compose -f docker-compose.app down'
+                        echo "🧹 Limpiando contenedores..."
+                        sh 'docker compose --file docker-compose.app.ym down'
                     }
                 }
             }
         }
 
-        // NIVEL 3: Despliegue/Release (Solo para Main)
         stage('PROD: Release') {
             when { branch 'main' }
             steps {
-                echo "📦 Publicando imágenes oficiales y preparando deploy..."
-                sh 'echo "Simulando push a registro de imágenes"'
+                echo "📦 Publicando imágenes oficiales..."
+                sh 'echo "Simulando push de imágenes finales"'
             }
         }
     }
@@ -91,14 +89,14 @@ pipeline {
         success {
             script {
                 if (env.BRANCH_NAME == 'main') {
-                    echo "🏆 ¡PRODUCCIÓN ACTUALIZADA CORRECTAMENTE!"
+                    echo "🏆 PRODUCCIÓN ACTUALIZADA"
                 } else {
-                    echo "✅ Rama ${env.BRANCH_NAME} verificada con éxito."
+                    echo "✅ Rama ${env.BRANCH_NAME} verificada"
                 }
             }
         }
         failure {
-            echo "❌ El pipeline falló en la rama ${env.BRANCH_NAME}. Revisa los logs."
+            echo "❌ Fallo en la rama ${env.BRANCH_NAME}."
         }
         always {
             cleanWs deleteDirs: true, disableDeferredWipeout: true
