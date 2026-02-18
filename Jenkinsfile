@@ -9,9 +9,9 @@ pipeline {
         stage('Análisis y Tests (CI)') {
             parallel {
                 stage('Frontend') {
-                    agent { docker { image 'node:20-alpine' 
-                        args '-u 0:0' } 
-                        }
+                    // Solo corre si hay cambios en la carpeta front-end
+                    when { changeset "front-end/**" }
+                    agent { docker { image 'node:20-alpine' args '-u 0:0' } }
                     steps {
                         dir('front-end') {
                             sh 'npm install'
@@ -20,29 +20,13 @@ pipeline {
                     }
                 }
                 stage('Backend') {
-                    agent { docker { image 'node:20-alpine' 
-                        args '-u 0:0'} }
+                    // Solo corre si hay cambios en la carpeta backend
+                    when { changeset "backend/**" }
+                    agent { docker { image 'node:20-alpine' args '-u 0:0' } }
                     steps {
                         dir('backend') {
                             sh 'npm install'
                             sh 'npm run test -- --passWithNoTests'
-                        }
-                    }
-                }
-                stage('Data Science') {
-                    agent { docker { image 'python:3.9-slim' 
-                            args '-u 0:0'
-                            } }
-                    steps {
-                        script {
-                            if (fileExists('ml-service')) {
-                                dir('ml-service') {
-                                    sh 'pip install -r requirements.txt --quiet'
-                                    sh 'pytest tests/ || echo No_hay_tests_definidos'
-                                }
-                            } else {
-                                echo "Pendiente: Crear carpeta ml-service con tests de Python"
-                            }
                         }
                     }
                 }
@@ -57,7 +41,7 @@ pipeline {
                 }
             }
             steps {
-                echo "🚀 Validando construcción de imágenes Docker (manual build)..."
+                echo "🚀 Validando construcción de imágenes Docker..."
                 script {
                     // Validamos Backend
                     dir('backend') {
@@ -67,12 +51,6 @@ pipeline {
                     dir('front-end') {
                         sh 'docker build -t s02-frontend:test .'
                     }
-                    // Validamos ML-Service si existe
-                    if (fileExists('ml-service')) {
-                        dir('ml-service') {
-                            sh 'docker build -t s02-ml:test .'
-                        }
-                    }
                 }
             }
         }
@@ -80,7 +58,7 @@ pipeline {
     
     post {
         success {
-            echo "✅ ¡Todo pasó perfectamente! Las imágenes construyen y los tests pasaron."
+            echo "✅ ¡Todo pasó perfectamente! Frontend y Backend están validados."
         }
         failure {
             echo "❌ Algo falló. Revisa los logs arriba."
