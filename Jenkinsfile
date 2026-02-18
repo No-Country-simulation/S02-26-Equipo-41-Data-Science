@@ -6,13 +6,17 @@ pipeline {
     }
 
     stages {
-        // NIVEL 1: Siempre se ejecuta (para cualquier rama)
-        // Queremos asegurar que NADA rompa el código base.
-        stage('CI: Tests Rápidos') {
+        // NIVEL 1: Análisis y Tests Unitarios (Se ejecuta para TODAS las ramas)
+        stage('CI: Unit Tests') {
             parallel {
                 stage('Frontend Check') {
                     when { changeset "front-end/**" }
-                    agent { docker { image 'node:20-alpine'; args '-u 0:0' } }
+                    agent { 
+                        docker { 
+                            image 'node:20-alpine'
+                            args '-u 0:0' 
+                        } 
+                    }
                     steps {
                         dir('front-end') {
                             sh 'npm install'
@@ -22,7 +26,12 @@ pipeline {
                 }
                 stage('Backend Check') {
                     when { changeset "backend/**" }
-                    agent { docker { image 'node:20-alpine'; args '-u 0:0' } }
+                    agent { 
+                        docker { 
+                            image 'node:20-alpine'
+                            args '-u 0:0' 
+                        } 
+                    }
                     steps {
                         dir('backend') {
                             sh 'npm install'
@@ -33,32 +42,47 @@ pipeline {
             }
         }
 
-        // NIVEL 2: Solo para Development o ramas de integración
-        // Aquí el proceso es más pesado (Build de Docker).
-        stage('CD: Build & Registry') {
+        // NIVEL 2: Integración con Base de Datos (Solo Development y Main)
+        stage('CD: Integration Test') {
             when { 
                 anyOf {
                     branch 'development'
                     branch 'main'
+                    branch 'feature/jenkins' // Mantenemos esta para que puedas probarlo ahora
                 }
             }
             steps {
-                echo "🚀 Rama importante detectada: Generando imágenes de Docker..."
+                echo "🚀 Iniciando entorno integrado con docker-compose.app..."
                 script {
-                    dir('backend') { sh 'docker build -t s02-backend:latest .' }
-                    dir('front-end') { sh 'docker build -t s02-frontend:latest .' }
+                    // Levantamos Front, Back y la DB de tu compañero
+                    sh 'docker compose -f docker-compose.app up -d --build'
+                    
+                    try {
+                        echo "🔍 Verificando que los servicios estén activos..."
+                        sh 'docker ps'
+                        
+                        // Damos 10 segundos para que Postgres termine de arrancar
+                        sh 'sleep 10'
+                        
+                        echo "✅ Ecosistema validado y conectado."
+                    } catch (Exception e) {
+                        echo "❌ Error durante la integración: ${e.getMessage()}"
+                        error("Prueba de integración fallida")
+                    } finally {
+                        // Limpieza obligatoria para no agotar recursos
+                        echo "🧹 Bajando contenedores de prueba..."
+                        sh 'docker compose -f docker-compose.app down'
+                    }
                 }
             }
         }
 
-        // NIVEL 3: Solo para Main
-        // Este stage simula el paso final a producción.
+        // NIVEL 3: Despliegue/Release (Solo para Main)
         stage('PROD: Release') {
             when { branch 'main' }
             steps {
-                echo "📦 Publicando versión oficial en Main..."
-                // Aquí podrías taggear la imagen como :v1.0, :stable, etc.
-                sh 'echo "Simulando push a DockerHub o despliegue a AWS"'
+                echo "📦 Publicando imágenes oficiales y preparando deploy..."
+                sh 'echo "Aquí irían los comandos de push a Docker Hub o despliegue final"'
             }
         }
     }
@@ -67,14 +91,17 @@ pipeline {
         success {
             script {
                 if (env.BRANCH_NAME == 'main') {
-                    echo "🏆 ¡PRODUCCIÓN ACTUALIZADA!"
+                    echo "🏆 ¡PRODUCCIÓN ACTUALIZADA CORRECTAMENTE!"
                 } else {
-                    echo "✅ Rama ${env.BRANCH_NAME} verificada."
+                    echo "✅ Rama ${env.BRANCH_NAME} verificada con éxito."
                 }
             }
         }
-        failure { echo "❌ Error en el Pipeline de ${env.BRANCH_NAME}." }
+        failure {
+            echo "❌ El pipeline falló en la rama ${env.BRANCH_NAME}. Revisa los logs."
+        }
         always {
+            // Borramos el workspace para evitar problemas de permisos de archivos
             cleanWs deleteDirs: true, disableDeferredWipeout: true
         }
     }

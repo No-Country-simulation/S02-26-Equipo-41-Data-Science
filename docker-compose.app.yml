@@ -1,4 +1,28 @@
 services:
+  # La base de datos que subió tu compañero
+  db:
+    image: postgres:16
+    container_name: nocountry-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mvp
+    ports:
+      - '5432:5432'
+    volumes:
+      - nocountry_pgdata:/var/lib/postgresql/data
+
+  # Tu Backend (ahora conectado a esa DB)
+  backend:
+    build: ./backend
+    container_name: backend-container
+    ports:
+      - "3000:3000"
+    restart: always
+    depends_on:
+      - db  # Esto asegura que la DB arranque antes que el backend
+
+  # Tu Frontend
   frontend:
     build: ./front-end
     container_name: frontend-container
@@ -6,9 +30,5 @@ services:
       - "8081:80"
     restart: always
 
-  backend:
-    build: ./backend
-    container_name: backend-container
-    ports:
-      - "3000:3000"
-    restart: always
+volumes:
+  nocountry_pgdata:
