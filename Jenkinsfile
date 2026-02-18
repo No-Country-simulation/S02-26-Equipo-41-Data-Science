@@ -41,24 +41,26 @@ pipeline {
             }
             agent {
                 docker {
-                    image 'docker:24-cli'
-                    // EXPLICACIÓN DE ARGS:
-                    // -u 0:0 -> Ejecuta como root para evitar el "Permission Denied"
-                    // -v /var/run/docker.sock... -> Conecta con el motor Docker del servidor
-                    // -e HOME=... -> Redirige la configuración de docker a una carpeta con permisos
+                    // CAMBIO AQUÍ: Usamos una versión más reciente para compatibilidad de API
+                    image 'docker:latest' 
                     args '-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock -e HOME=/tmp'
                 }
             }
             steps {
-                echo "🚀 Levantando entorno con permisos de root y bypass de HOME..."
+                echo "🚀 Levantando entorno de integración..."
                 script {
-                    // Ahora docker compose podrá crear sus carpetas temporales en /tmp
-                    sh 'docker compose up -d --build'
+                    // Limpieza preventiva
+                    sh 'docker rm -f nocountry-postgres frontend-container backend-container || true'
+                    sh 'docker compose down --remove-orphans || true'
+                    
+                    // Despliegue
+                    sh 'docker compose up -d --build --force-recreate'
                     
                     try {
                         echo "🔍 Verificando servicios..."
+                        // Esperamos un poco a que el motor termine de asentar los contenedores
+                        sh 'sleep 10'
                         sh 'docker ps'
-                        sh 'sleep 15'
                         echo "✅ Ecosistema validado."
                     } catch (Exception e) {
                         error("Fallo en la validación: ${e.getMessage()}")
@@ -73,7 +75,7 @@ pipeline {
         stage('PROD: Release') {
             when { branch 'main' }
             steps {
-                echo "📦 Rama principal detectada."
+                echo "📦 Rama principal detectada. Pipeline completado con éxito."
             }
         }
     }
