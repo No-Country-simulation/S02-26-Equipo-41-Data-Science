@@ -70,7 +70,7 @@ pipeline {
             echo "❌ Algo falló. Revisa los logs arriba."
         }
         always {
-            // Limpieza robusta para evitar errores de permisos en Windows/Docker
+            // Limpieza robusta para evitar errores de permisos en Windows/Docke
             cleanWs deleteDirs: true, disableDeferredWipeout: true
             echo "Pipeline finalizado en ${env.BRANCH_NAME}"
         }
