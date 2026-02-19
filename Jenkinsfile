@@ -10,7 +10,13 @@ pipeline {
             parallel {
                 stage('Frontend Check') {
                     when { changeset "front-end/**" }
-                    agent { docker { image 'node:20-alpine'; args '-u 0:0' } }
+                    agent { 
+                        docker { 
+                            image 'node:20-alpine'
+                            // Agregamos permisos y acceso al socket para evitar el "Permission Denied"
+                            args '-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock' 
+                        } 
+                    }
                     steps {
                         dir('front-end') {
                             sh 'npm install'
@@ -20,10 +26,17 @@ pipeline {
                 }
                 stage('Backend Check') {
                     when { changeset "backend/**" }
-                    agent { docker { image 'node:20-alpine'; args '-u 0:0' } }
+                    agent { 
+                        docker { 
+                            image 'node:20-alpine'
+                            // Agregamos permisos y acceso al socket aquí también
+                            args '-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock'
+                        } 
+                    }
                     steps {
                         dir('backend') {
                             sh 'npm install'
+                            // Ejecuta los tests de NestJS (incluyendo tu nuevo health.spec.ts)
                             sh 'npm run test -- --passWithNoTests'
                         }
                     }
@@ -41,7 +54,6 @@ pipeline {
             }
             agent {
                 docker {
-                    // CAMBIO AQUÍ: Usamos una versión más reciente para compatibilidad de API
                     image 'docker:latest' 
                     args '-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock -e HOME=/tmp'
                 }
@@ -49,16 +61,15 @@ pipeline {
             steps {
                 echo "🚀 Levantando entorno de integración..."
                 script {
-                    // Limpieza preventiva
+                    // Limpieza preventiva de contenedores anteriores
                     sh 'docker rm -f nocountry-postgres frontend-container backend-container || true'
                     sh 'docker compose down --remove-orphans || true'
                     
-                    // Despliegue
+                    // Despliegue del stack completo
                     sh 'docker compose up -d --build --force-recreate'
                     
                     try {
                         echo "🔍 Verificando servicios..."
-                        // Esperamos un poco a que el motor termine de asentar los contenedores
                         sh 'sleep 10'
                         sh 'docker ps'
                         echo "✅ Ecosistema validado."
@@ -82,6 +93,7 @@ pipeline {
     
     post {
         always {
+            // Limpia el espacio de trabajo para no acumular archivos pesados
             cleanWs deleteDirs: true, disableDeferredWipeout: true
         }
     }
