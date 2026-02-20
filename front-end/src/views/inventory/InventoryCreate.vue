@@ -32,12 +32,14 @@ import BaseModal from '@/components/common/BaseModal.vue'
 import { createForm } from '@/utils/FormBuilder'
 import { useInventoryStore } from '@/stores/inventory'
 import { inventoryBreadcrumbs } from '@/utils/breadcrumbs'
+import { useAppToast } from '@/composables/useAppToast'
 
 
 const router = useRouter()
 const inventoryStore = useInventoryStore()
 const breadcrumbItems = inventoryBreadcrumbs.create()
 const showCancelModal = ref(false)
+const toast = useAppToast()
 
 // Configuración del formulario usando Builder
 const formConfig = createForm()
@@ -140,20 +142,14 @@ const confirmCancel = () => {
 const handleSubmit = async (formData) => {
   try {
     // 1. Llamada a tu store/API
-    // await inventoryStore.createProduct(formData)
+    await inventoryStore.createProduct(formData)
     console.log('Datos a guardar:', formData)
-
-    // 2. Mostrar un Toast de ÉXITO (asumiendo que tienes un composable o librería para esto)
-    // useToast().success('Producto registrado correctamente')
-    
-    // 3. Redirigir al usuario de vuelta al inventario
+    toast.success('Producto registrado correctamente en el inventario')
     router.push('/inventario')
 
   } catch (error) {
     console.error('Error al guardar:', error)
-    
-    // Mostrar un Toast de ERROR si falla la API
-    // useToast().error('Hubo un problema al registrar el producto')
+    toast.error('Ocurrió un problema al intentar guardar el producto. Inténtalo de nuevo.')
   }
 }
 </script>
