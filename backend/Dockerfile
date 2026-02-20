@@ -13,5 +13,8 @@ COPY package*.json ./
 RUN npm install --omit=dev
 # Copiamos el dist desde la etapa anterior (build)
 COPY --from=build /app/dist ./dist
+
 EXPOSE 3000
-CMD ["node", "dist/main.js"]
+
+# Este comando busca el main.js y lo ejecuta, no importa si está en dist/ o dist/src/
+CMD ["sh", "-c", "node $(find dist -name main.js)"]
