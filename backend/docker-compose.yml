@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: mvp
     ports:
-      - '5432:5432'
+      - '5433:5432'
     volumes:
       - nocountry_pgdata:/var/lib/postgresql/data
 

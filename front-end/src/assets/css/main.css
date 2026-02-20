@@ -139,21 +139,6 @@
 }
 
 @layer utilities {
-  /* Animaciones personalizadas */
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-in;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
 
   /* Scrollbar personalizado */
   .scrollbar-thin::-webkit-scrollbar {
@@ -171,4 +156,23 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     @apply bg-gray-400 dark:bg-gray-500;
   }
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Estado inicial de entrada (invisible y desplazado abajo) */
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* Estado final de salida (invisible y desplazado abajo) */
+/* Nota: Al salir también bajamos un poco para que sea simétrico, 
+   o puedes usar translateY(-10px) para que suba */
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
 }
