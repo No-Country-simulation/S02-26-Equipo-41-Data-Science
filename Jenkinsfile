@@ -14,7 +14,6 @@ pipeline {
                     }
                 }
                 stage('Backend Check') {
-                    when { branch 'development' }
                     agent { docker { image 'node:20-alpine'; args '-u 0:0' } }
                     steps { 
                         dir('backend') { 
@@ -26,7 +25,6 @@ pipeline {
         }
 
         stage('CD: Integration Test & Health Check') {
-            when { branch 'development' }
             agent {
                 docker {
                     image 'docker:latest' 
