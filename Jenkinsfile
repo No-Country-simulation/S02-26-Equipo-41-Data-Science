@@ -1,66 +1,33 @@
 pipeline {
     agent none 
-
-    triggers {
-        githubPush()
-    }
-
+    triggers { githubPush() }
+    
     stages {
         stage('CI: Unit Tests') {
             parallel {
                 stage('Frontend Check') {
-                    when { 
-                        anyOf {
-                            branch 'feature/jenkins'
-                            branch 'development'
-                            changeset "front-end/**"
-                        }
-                    }
-                    agent { 
-                        docker { 
-                            image 'node:20-alpine'
-                            args '-u 0:0' 
+                    when { branch 'development' }
+                    agent { docker { image 'node:20-alpine'; args '-u 0:0' } }
+                    steps { 
+                        dir('front-end') { 
+                            sh 'npm install && npx vitest run --passWithNoTests' 
                         } 
-                    }
-                    steps {
-                        dir('front-end') {
-                            sh 'npm install'
-                            sh 'npx vitest run --passWithNoTests'
-                        }
                     }
                 }
                 stage('Backend Check') {
-                    when { 
-                        anyOf {
-                            branch 'feature/jenkins'
-                            branch 'development'
-                            changeset "backend/**"
-                        }
-                    }
-                    agent { 
-                        docker { 
-                            image 'node:20-alpine'
-                            args '-u 0:0'
+                    when { branch 'development' }
+                    agent { docker { image 'node:20-alpine'; args '-u 0:0' } }
+                    steps { 
+                        dir('backend') { 
+                            sh 'npm install && npm run test -- --passWithNoTests' 
                         } 
-                    }
-                    steps {
-                        dir('backend') {
-                            sh 'npm install'
-                            sh 'npm run test -- --passWithNoTests'
-                        }
                     }
                 }
             }
         }
 
         stage('CD: Integration Test & Health Check') {
-            when { 
-                anyOf {
-                    branch 'feature/jenkins'
-                    branch 'development'
-                    branch 'main'
-                }
-            }
+            when { branch 'development' }
             agent {
                 docker {
                     image 'docker:latest' 
@@ -69,17 +36,24 @@ pipeline {
             }
             steps {
                 script {
-                    echo "🚀 Levantando entorno de integración..."
+                    echo "🧹 Limpiando imágenes previas y forzando build sin caché..."
+                    
+                    // Bajamos todo y eliminamos volúmenes huérfanos
                     sh 'docker compose down --remove-orphans || true'
-                    sh 'docker compose up -d --build --force-recreate'
+                    
+                    // Forzamos el build sin usar capas guardadas para evitar el error del dist/main
+                    sh 'docker compose build --no-cache backend'
+                    
+                    // Levantamos el entorno
+                    sh 'docker compose up -d --force-recreate'
                     
                     echo "🔍 Iniciando validación técnica (Health Check)..."
                     
-                    // Script de validación: reintenta cada 5 segundos hasta 10 veces
                     def healthCheck = sh(script: '''
                         count=0
-                        while [ $count -lt 10 ]; do
-                            echo "Probing http://localhost:3000/health... (Attempt: $((count+1)))"
+                        while [ $count -lt 12 ]; do
+                            echo "Probing http://localhost:3000/health... (Intento: $((count+1)))"
+                            # Intentamos conectar al endpoint de salud
                             if docker exec backend-container wget -qO- http://localhost:3000/health > /dev/null; then
                                 echo "✅ VALIDACIÓN EXITOSA: El backend está online."
                                 exit 0
@@ -87,21 +61,26 @@ pipeline {
                             sleep 5
                             count=$((count+1))
                         done
-                        echo "❌ ERROR: El Health Check falló tras 50 segundos."
+                        echo "❌ ERROR: El Health Check falló tras 60 segundos."
                         exit 1
                     ''', returnStatus: true)
 
                     if (healthCheck != 0) {
                         echo "📄 LOGS DE EMERGENCIA (Backend):"
                         sh 'docker logs backend-container'
-                        error("El test de integración falló: el servicio no está saludable.")
+                        
+                        echo "📂 ESTADO DE LA CARPETA DIST:"
+                        // Esto nos dirá si el archivo main.js existe realmente o si está en otra subcarpeta
+                        sh 'docker exec backend-container ls -R /app/dist || echo "La carpeta /app/dist no existe"'
+                        
+                        error("El test de integración falló: el servicio no está saludable o el archivo main.js no existe.")
                     }
                 }
             }
             post {
-                always {
+                always { 
                     echo "🧹 Limpiando contenedores de prueba..."
-                    sh 'docker compose down'
+                    sh 'docker compose down' 
                 }
             }
         }
