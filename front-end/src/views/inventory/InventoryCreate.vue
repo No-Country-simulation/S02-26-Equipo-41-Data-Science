@@ -9,13 +9,26 @@
       @submit="handleSubmit"
       @cancel="handleCancel"
     />
+
+    <BaseModal
+      :show="showCancelModal"
+      type="warning"
+      title="¿Descartar cambios?"
+      description="Los datos ingresados no se guardarán. ¿Estás seguro de que deseas salir?"
+      button1Title="Cancelar"
+      button2Title="Sí, descartar"
+      @action1="showCancelModal = false" 
+      @action2="confirmCancel"
+    />
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import FormTemplate from '@/components/common/FormTemplate.vue'
 import BaseBreadcrumb from '@/components/common/BaseBreadcrumb.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import { createForm } from '@/utils/FormBuilder'
 import { useInventoryStore } from '@/stores/inventory'
 import { inventoryBreadcrumbs } from '@/utils/breadcrumbs'
@@ -24,6 +37,7 @@ import { inventoryBreadcrumbs } from '@/utils/breadcrumbs'
 const router = useRouter()
 const inventoryStore = useInventoryStore()
 const breadcrumbItems = inventoryBreadcrumbs.create()
+const showCancelModal = ref(false)
 
 // Configuración del formulario usando Builder
 const formConfig = createForm()
@@ -107,20 +121,39 @@ const formConfig = createForm()
 
   .build()
 
-// Handlers
-const handleSubmit = async (formData) => {
-  try {
-    await inventoryStore.createProduct(formData)
-    router.push({ name: 'inventory-list' })
-  } catch (error) {
-    console.error('Error creating product:', error)
-    alert('Error al crear el producto')
-  }
+const handleCancel = () => {
+  // Aquí podrías validar si el formulario está sucio (dirty) antes de mostrar el modal.
+  // Por ahora, asumimos que siempre mostramos la advertencia.
+  showCancelModal.value = true
 }
 
-const handleCancel = () => {
-  if (confirm('¿Descartar los cambios?')) {
-    router.push({ name: 'inventory-list' })
+// Esta función se dispara cuando el usuario confirma en el BaseModal que SÍ quiere salir
+const confirmCancel = () => {
+  showCancelModal.value = false
+  // Regresar a la lista de inventario
+  router.push('/inventario') 
+}
+
+// --- LÓGICA DE GUARDADO ---
+
+// Esta función se dispara cuando el formulario es válido y se envía
+const handleSubmit = async (formData) => {
+  try {
+    // 1. Llamada a tu store/API
+    // await inventoryStore.createProduct(formData)
+    console.log('Datos a guardar:', formData)
+
+    // 2. Mostrar un Toast de ÉXITO (asumiendo que tienes un composable o librería para esto)
+    // useToast().success('Producto registrado correctamente')
+    
+    // 3. Redirigir al usuario de vuelta al inventario
+    router.push('/inventario')
+
+  } catch (error) {
+    console.error('Error al guardar:', error)
+    
+    // Mostrar un Toast de ERROR si falla la API
+    // useToast().error('Hubo un problema al registrar el producto')
   }
 }
 </script>

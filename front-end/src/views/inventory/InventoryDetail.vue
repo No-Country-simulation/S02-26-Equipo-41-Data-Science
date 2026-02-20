@@ -22,6 +22,7 @@
         <div class="flex gap-3">
           <BaseButton
             variant="secondary"
+            copy
             icon-left="edit"
             @click="goToEdit"
           >
@@ -29,6 +30,7 @@
           </BaseButton>
           <BaseButton
             variant="danger"
+            copy
             icon-left="delete"
             @click="handleDelete"
           >
@@ -36,6 +38,17 @@
           </BaseButton>
         </div>
       </div>
+
+      <BaseModal
+        :show="showDeleteModal"
+        type="warning"
+        title="¿Seguro quiere borrar este producto?"
+        description="Esta acción no se puede deshacer. El producto será eliminado"
+        button1Title="Cancelar"
+        button2Title="Eliminar"
+        @action1="showDeleteModal = false" 
+        @action2="confirmDelete"
+      />
 
       <!-- Grid de información -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -195,6 +208,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseBreadcrumb from '@/components/common/BaseBreadcrumb.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import { useInventoryStore } from '@/stores/inventory'
 import { inventoryBreadcrumbs } from '@/utils/breadcrumbs'
 
@@ -212,6 +226,7 @@ const breadcrumbItems = inventoryBreadcrumbs.detail(props.id)
 
 const product = ref(null)
 const loading = ref(true)
+const showDeleteModal = ref(false)
 
 // Cargar producto
 onMounted(async () => {
@@ -230,11 +245,14 @@ const goToEdit = () => {
   router.push({ name: 'inventory-edit', params: { id: props.id } })
 }
 
-const handleDelete = async () => {
-  if (confirm(`¿Estás seguro de eliminar "${product.value.name}"?`)) {
-    await inventoryStore.deleteProduct(props.id)
-    router.push({ name: 'inventory-list' })
-  }
+const handleDelete = () => {
+  showDeleteModal.value = true
+}
+
+const confirmDelete = async () => {
+  showDeleteModal.value = false
+  await inventoryStore.deleteProduct(props.id)
+  router.push({ name: 'inventory-list' })
 }
 
 // Helpers
