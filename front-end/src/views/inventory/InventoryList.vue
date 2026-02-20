@@ -13,6 +13,7 @@
       <BaseButton
         variant="primary"
         icon-left="add"
+        copy
         @click="goToCreate"
       >
         Agregar Producto
