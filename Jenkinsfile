@@ -6,7 +6,6 @@ pipeline {
         stage('CI: Unit Tests') {
             parallel {
                 stage('Frontend Check') {
-                    when { branch 'development' }
                     agent { docker { image 'node:20-alpine'; args '-u 0:0' } }
                     steps { 
                         dir('front-end') { 
