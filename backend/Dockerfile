@@ -1,4 +1,4 @@
-# Stage 1: Build
+# 1. Etapa de compilación
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package*.json ./
@@ -6,12 +6,12 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Stage 2: Runtime
+# 2. Etapa de ejecución (Producción)
 FROM node:20-alpine
 WORKDIR /app
-COPY --from=build /app/package*.json ./
-COPY --from=build /app/node_modules ./node_modules
+COPY package*.json ./
+RUN npm install --omit=dev
+# Copiamos el dist desde la etapa anterior (build)
 COPY --from=build /app/dist ./dist
-
 EXPOSE 3000
-CMD ["npm", "run", "start:prod"]
+CMD ["node", "dist/main.js"]
