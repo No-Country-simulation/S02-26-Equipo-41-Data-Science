@@ -70,13 +70,12 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { toast } from '@/utils/toast'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import { useAppToast } from '@/composables/useAppToast'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const toast = useAppToast()
 const formData = reactive({
   email: '',
   password: '',

@@ -32,14 +32,12 @@ import BaseModal from '@/components/common/BaseModal.vue'
 import { createForm } from '@/utils/FormBuilder'
 import { useInventoryStore } from '@/stores/inventory'
 import { inventoryBreadcrumbs } from '@/utils/breadcrumbs'
-import { useAppToast } from '@/composables/useAppToast'
-
+import { toast } from '@/utils/toast'
 
 const router = useRouter()
 const inventoryStore = useInventoryStore()
 const breadcrumbItems = inventoryBreadcrumbs.create()
 const showCancelModal = ref(false)
-const toast = useAppToast()
 
 // Configuración del formulario usando Builder
 const formConfig = createForm()

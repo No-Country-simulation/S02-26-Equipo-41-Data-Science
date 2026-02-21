@@ -40,6 +40,7 @@ import BaseModal from '@/components/common/BaseModal.vue'
 import { createForm } from '@/utils/FormBuilder'
 import { useInventoryStore } from '@/stores/inventory'
 import { inventoryBreadcrumbs } from '@/utils/breadcrumbs'
+import { toast } from '@/utils/toast'
 const router = useRouter()
 const route = useRoute()
 const inventoryStore = useInventoryStore()
@@ -114,6 +115,7 @@ onMounted(async () => {
     product.value = await inventoryStore.getProductById(productId)
   } catch (error) {
     console.error('Error loading product:', error)
+    toast.error('Error al cargar el producto. Por favor, intenta nuevamente.')
   } finally {
     loading.value = false
   }
@@ -136,10 +138,11 @@ const confirmCancel = () => {
 const handleSubmit = async (formData) => {
   try {
     await inventoryStore.updateProduct(productId, formData)
+    toast.success('Producto actualizado correctamente')
     router.push({ name: 'inventory-detail', params: { id: productId } })
   } catch (error) {
     console.error('Error updating product:', error)
-    alert('Error al actualizar el producto')
+    toast.error('Error al actualizar el producto')
   }
 }
 </script>

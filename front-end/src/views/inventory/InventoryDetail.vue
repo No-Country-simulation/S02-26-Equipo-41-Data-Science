@@ -209,6 +209,7 @@ import { useRouter, useRoute } from 'vue-router'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseBreadcrumb from '@/components/common/BaseBreadcrumb.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
+import { toast } from '@/utils/toast'
 import { useInventoryStore } from '@/stores/inventory'
 import { inventoryBreadcrumbs } from '@/utils/breadcrumbs'
 
@@ -253,8 +254,8 @@ const confirmDelete = async () => {
   showDeleteModal.value = false
   await inventoryStore.deleteProduct(props.id)
   router.push({ name: 'inventory-list' })
+  toast.success('Producto eliminado correctamente')
 }
-
 // Helpers
 const getStockClass = (stock) => {
   if (stock === 0) return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
@@ -273,4 +274,5 @@ const getStockLabel = (stock) => {
   if (stock < 10) return `Stock Bajo (${stock} unidades)`
   return `Stock OK (${stock} unidades)`
 }
+
 </script>
