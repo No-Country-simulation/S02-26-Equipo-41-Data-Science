@@ -1,13 +1,7 @@
 <template>
     <div class="max-w-4xl mx-auto px-8 pb-8">
-        <!-- Breadcrumbs -->
-        <nav class="flex flex-wrap gap-2 mb-6 text-sm">
-        <router-link to="/inventario" class="text-gray-500 hover:underline">Inventario</router-link>
-        <span class="text-gray-500">/</span>
-        <router-link :to="`/inventario/${productId}`" class="text-gray-500 hover:underline">Detalle</router-link>
-        <span class="text-gray-500">/</span>
-        <span class="text-primary font-bold">Editar</span>
-        </nav>
+        <!-- Breadcrumb -->
+        <BaseBreadcrumb :items="breadcrumbItems" />
 
         <!-- Loading state -->
         <div v-if="loading" class="flex items-center justify-center py-12">
@@ -35,9 +29,10 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import FormTemplate from '@/components/common/FormTemplate.vue'
+import BaseBreadcrumb from '@/components/common/BaseBreadcrumb.vue'
 import { createForm } from '@/utils/FormBuilder'
 import { useInventoryStore } from '@/stores/inventory'
-
+import { inventoryBreadcrumbs } from '@/utils/breadcrumbs'
 const router = useRouter()
 const route = useRoute()
 const inventoryStore = useInventoryStore()
@@ -45,6 +40,7 @@ const inventoryStore = useInventoryStore()
 const productId = route.params.id
 const product = ref(null)
 const loading = ref(true)
+const breadcrumbItems = inventoryBreadcrumbs.edit(productId)
 
 // Configuración del formulario de edición
 const formConfig = createForm()
