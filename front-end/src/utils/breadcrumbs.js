@@ -13,5 +13,10 @@ export const inventoryBreadcrumbs = {
     { label: 'Inventario', to: '/inventario' },
     { label: 'Detalle', to: `/inventario/${id}` },
     { label: 'Editar' }
+  ],
+  adjustStock: (id) => [
+    { label: 'Inventario', to: '/inventario' },
+    { label: 'Detalle', to: `/inventario/${id}` },
+    { label: 'Ajustar Stock' }
   ]
 }

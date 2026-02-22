@@ -70,12 +70,12 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { toast } from '@/utils/toast'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-
 const formData = reactive({
   email: '',
   password: '',
@@ -135,11 +135,14 @@ const handleSubmit = async () => {
     if (result.success) {
       // Redirect to dashboard
       router.push({ name: 'home' })
+      toast.success('Sesión iniciada correctamente')
     } else {
       generalError.value = 'Credenciales incorrectas. Por favor, intenta nuevamente.'
+      toast.error('Credenciales incorrectas. Por favor, intenta nuevamente.')
     }
   } catch (error) {
     generalError.value = 'Ha ocurrido un error. Por favor, intenta más tarde.'
+    toast.error('Ha ocurrido un error al iniciar sesión. Por favor, inténtalo más tarde.')
     console.error('Login error:', error)
   } finally {
     isLoading.value = false

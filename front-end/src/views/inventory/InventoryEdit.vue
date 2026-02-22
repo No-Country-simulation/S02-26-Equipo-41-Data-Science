@@ -17,11 +17,17 @@
         @cancel="handleCancel"
         />
 
-        <!-- Error state -->
-        <div v-else class="card text-center py-12">
-        <span class="material-symbols-outlined text-6xl text-red-500 mb-4">error</span>
-        <p class="text-gray-500">Producto no encontrado</p>
-        </div>
+        <BaseModal
+          :show="showCancelModal"
+          type="warning"
+          title="¿Descartar cambios?"
+          description="Los datos ingresados no se guardarán. ¿Estás seguro de que deseas salir?"
+          button1Title="Cancelar"
+          button2Title="Sí, descartar"
+          @action1="showCancelModal = false" 
+          @action2="confirmCancel"
+        />
+
     </div>
 </template>
 
@@ -30,9 +36,11 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import FormTemplate from '@/components/common/FormTemplate.vue'
 import BaseBreadcrumb from '@/components/common/BaseBreadcrumb.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import { createForm } from '@/utils/FormBuilder'
 import { useInventoryStore } from '@/stores/inventory'
 import { inventoryBreadcrumbs } from '@/utils/breadcrumbs'
+import { toast } from '@/utils/toast'
 const router = useRouter()
 const route = useRoute()
 const inventoryStore = useInventoryStore()
@@ -40,6 +48,7 @@ const inventoryStore = useInventoryStore()
 const productId = route.params.id
 const product = ref(null)
 const loading = ref(true)
+const showCancelModal = ref(false)
 const breadcrumbItems = inventoryBreadcrumbs.edit(productId)
 
 // Configuración del formulario de edición
@@ -106,23 +115,34 @@ onMounted(async () => {
     product.value = await inventoryStore.getProductById(productId)
   } catch (error) {
     console.error('Error loading product:', error)
+    toast.error('Error al cargar el producto. Por favor, intenta nuevamente.')
   } finally {
     loading.value = false
   }
 })
 
+const handleCancel = () => {
+  // Aquí podrías validar si el formulario está sucio (dirty) antes de mostrar el modal.
+  // Por ahora, asumimos que siempre mostramos la advertencia.
+  showCancelModal.value = true
+}
+
+// Esta función se dispara cuando el usuario confirma en el BaseModal que SÍ quiere salir
+const confirmCancel = () => {
+  showCancelModal.value = false
+  // Regresar a la lista de inventario
+  router.push({ name: 'inventory-detail', params: { id: productId } }) 
+}
+
 // Handlers
 const handleSubmit = async (formData) => {
   try {
     await inventoryStore.updateProduct(productId, formData)
+    toast.success('Producto actualizado correctamente')
     router.push({ name: 'inventory-detail', params: { id: productId } })
   } catch (error) {
     console.error('Error updating product:', error)
-    alert('Error al actualizar el producto')
+    toast.error('Error al actualizar el producto')
   }
-}
-
-const handleCancel = () => {
-  router.push({ name: 'inventory-detail', params: { id: productId } })
 }
 </script>

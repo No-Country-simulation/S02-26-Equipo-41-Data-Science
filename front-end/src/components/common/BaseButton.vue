@@ -30,7 +30,7 @@ const props = defineProps({
   variant: {
     type: String,
     default: 'primary',
-    validator: (value) => ['primary', 'secondary', 'ghost', 'danger'].includes(value)
+    validator: (value) => ['primary', 'secondary', 'ghost', 'warning', 'danger', 'success'].includes(value)
   },
   type: {
     type: String,
@@ -60,13 +60,26 @@ const props = defineProps({
   fullWidth: {
     type: Boolean,
     default: false
+  },
+  copy: {
+    type: Boolean,
+    default: false
   }
 })
+
+const copyShadowByVariant = {
+  primary: 'hover:shadow-[5px_5px_0_rgba(59,130,246,0.35)]',
+  secondary: 'hover:shadow-[5px_5px_0_rgba(107,114,128,0.35)]',
+  ghost: 'hover:shadow-[5px_5px_0_rgba(99,102,241,0.35)]',
+  danger: 'hover:shadow-[5px_5px_0_rgba(220,38,38,0.35)]',
+  warning: 'hover:shadow-[5px_5px_0_rgba(234,88,12,0.35)]',
+  success: 'hover:shadow-[5px_5px_0_rgba(34,197,94,0.35)]'
+}
 
 const emit = defineEmits(['click'])
 
 const buttonClasses = computed(() => {
-  const classes = ['btn']
+  const classes = ['btn', 'transition-all duration-200']
   
   // Variants
   switch (props.variant) {
@@ -79,8 +92,14 @@ const buttonClasses = computed(() => {
     case 'ghost':
       classes.push('btn-ghost')
       break
+    case 'success':
+      classes.push('bg-green-600 text-white shadow-lg shadow-green-600/20')
+      break
     case 'danger':
-      classes.push('bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/20')
+      classes.push('bg-red-600 text-white shadow-lg shadow-red-600/20')
+      break
+    case 'warning':
+      classes.push('bg-orange-600 text-white shadow-lg shadow-orange-600/20')
       break
   }
   
@@ -94,6 +113,18 @@ const buttonClasses = computed(() => {
       break
   }
   
+  if (props.copy) {
+    const shadowColor =
+      copyShadowByVariant[props.variant] ||
+      copyShadowByVariant.primary
+
+    classes.push(
+      'cursor-copy',
+      'hover:scale-105',
+      shadowColor    
+    )
+  }
+
   // Full width
   if (props.fullWidth) {
     classes.push('w-full')
