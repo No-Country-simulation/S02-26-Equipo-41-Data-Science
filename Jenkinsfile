@@ -38,18 +38,45 @@ pipeline {
             agent {
                 docker {
                     image 'docker:latest'
-                    // Quitamos el entrypoint aquí y lo manejamos en los args de forma más limpia
                     args '-u 0:0 --entrypoint="" -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
                 script {
-                    // Tu lógica de docker-compose aquí está perfecta
+                    echo "🧹 Limpiando y reconstruyendo entorno..."
                     sh 'docker compose down --remove-orphans || true'
                     sh 'docker compose build --no-cache backend'
                     sh 'docker compose up -d --force-recreate'
                     
-                    // ... resto de tu script de Health Check
+                    echo "🔍 Iniciando validación de salud (Health Check)..."
+                    
+                    // Aquí insertamos el script que faltaba en tu log
+                    def healthCheck = sh(script: '''
+                        count=0
+                        while [ $count -lt 12 ]; do
+                            echo "Probando conexión... Intento $((count+1))/12"
+                            # Intentamos conectar al contenedor del backend
+                            if docker exec backend-container wget -qO- http://localhost:3000/health > /dev/null; then
+                                echo "✅ EL BACKEND RESPONDE CORRECTAMENTE"
+                                exit 0
+                            fi
+                            sleep 5
+                            count=$((count+1))
+                        done
+                        echo "❌ EL BACKEND NO RESPONDIÓ A TIEMPO"
+                        exit 1
+                    ''', returnStatus: true)
+
+                    if (healthCheck != 0) {
+                        sh 'docker logs backend-container'
+                        error("Falló el Health Check: El backend no está saludable.")
+                    }
+                }
+            }
+            post {
+                always {
+                    echo "🧹 Limpiando contenedores..."
+                    sh 'docker compose down'
                 }
             }
         }
