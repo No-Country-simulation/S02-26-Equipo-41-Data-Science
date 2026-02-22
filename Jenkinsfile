@@ -38,18 +38,51 @@ pipeline {
             agent {
                 docker {
                     image 'docker:latest'
-                    // Quitamos el entrypoint aquí y lo manejamos en los args de forma más limpia
+                    // El entrypoint vacío es vital para que Jenkins pueda ejecutar los comandos sh
                     args '-u 0:0 --entrypoint="" -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
                 script {
-                    // Tu lógica de docker-compose aquí está perfecta
+                    echo "🧹 Limpiando colisiones de nombres y contenedores previos..."
+                    // Esta línea borra los contenedores por nombre para evitar el error "Conflict. Name in use"
+                    sh 'docker rm -f frontend-container backend-container nocountry-postgres || true'
                     sh 'docker compose down --remove-orphans || true'
+                    
+                    echo "🛠️ Construyendo imagen de Backend..."
                     sh 'docker compose build --no-cache backend'
+                    
+                    echo "🚀 Levantando servicios..."
                     sh 'docker compose up -d --force-recreate'
                     
-                    // ... resto de tu script de Health Check
+                    echo "🔍 Iniciando validación de salud (Health Check)..."
+                    def healthCheck = sh(script: '''
+                        count=0
+                        while [ $count -lt 12 ]; do
+                            echo "Probando conexión a http://localhost:3000/health... Intento $((count+1))/12"
+                            # Usamos wget dentro del contenedor para verificar que el servicio responde
+                            if docker exec backend-container wget -qO- http://localhost:3000/health > /dev/null; then
+                                echo "✅ EL BACKEND RESPONDE CORRECTAMENTE"
+                                exit 0
+                            fi
+                            sleep 5
+                            count=$((count+1))
+                        done
+                        echo "❌ EL BACKEND NO RESPONDIÓ A TIEMPO"
+                        exit 1
+                    ''', returnStatus: true)
+
+                    if (healthCheck != 0) {
+                        echo "⚠️ Extrayendo logs del backend para depuración:"
+                        sh 'docker logs backend-container'
+                        error("Falló el Health Check: El backend no está saludable.")
+                    }
+                }
+            }
+            post {
+                always {
+                    echo "🧹 Limpiando entorno de integración..."
+                    sh 'docker compose down'
                 }
             }
         }
