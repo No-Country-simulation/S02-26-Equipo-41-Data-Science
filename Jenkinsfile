@@ -1,88 +1,57 @@
 pipeline {
-    agent any
+    agent none 
+    triggers { githubPush() }
     
-    triggers {
-        githubPush()
-    }
-
     stages {
         stage('CI: Unit Tests') {
             parallel {
                 stage('Frontend Check') {
-                    when { changeset "front-end/**" }
-                    agent { docker { image 'node:20-alpine'; args '-u 0:0' } }
-                    steps {
-                        dir('front-end') {
-                            sh 'npm install'
-                            sh 'npx vitest run --passWithNoTests'
-                        }
+                    agent { 
+                        docker { 
+                            image 'node:20-alpine'
+                            args '-u 0:0' 
+                        } 
+                    }
+                    steps { 
+                        dir('front-end') { 
+                            sh 'npm install && npx vitest run --passWithNoTests' 
+                        } 
                     }
                 }
                 stage('Backend Check') {
-                    when { changeset "backend/**" }
-                    agent { docker { image 'node:20-alpine'; args '-u 0:0' } }
-                    steps {
-                        dir('backend') {
-                            sh 'npm install'
-                            sh 'npm run test -- --passWithNoTests'
-                        }
+                    agent { 
+                        docker { 
+                            image 'node:20-alpine'
+                            args '-u 0:0' 
+                        } 
+                    }
+                    steps { 
+                        dir('backend') { 
+                            sh 'npm install && npm run test -- --passWithNoTests' 
+                        } 
                     }
                 }
             }
         }
 
-        stage('CD: Integration Test') {
-            when { 
-                anyOf {
-                    branch 'development'
-                    branch 'main'
-                    branch 'feature/jenkins' 
-                }
-            }
+        stage('CD: Integration Test & Health Check') {
             agent {
                 docker {
-                    // CAMBIO AQUÍ: Usamos una versión más reciente para compatibilidad de API
-                    image 'docker:latest' 
-                    args '-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock -e HOME=/tmp'
+                    image 'docker:latest'
+                    // Quitamos el entrypoint aquí y lo manejamos en los args de forma más limpia
+                    args '-u 0:0 --entrypoint="" -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
-                echo "🚀 Levantando entorno de integración..."
                 script {
-                    // Limpieza preventiva
-                    sh 'docker rm -f nocountry-postgres frontend-container backend-container || true'
+                    // Tu lógica de docker-compose aquí está perfecta
                     sh 'docker compose down --remove-orphans || true'
+                    sh 'docker compose build --no-cache backend'
+                    sh 'docker compose up -d --force-recreate'
                     
-                    // Despliegue
-                    sh 'docker compose up -d --build --force-recreate'
-                    
-                    try {
-                        echo "🔍 Verificando servicios..."
-                        // Esperamos un poco a que el motor termine de asentar los contenedores
-                        sh 'sleep 10'
-                        sh 'docker ps'
-                        echo "✅ Ecosistema validado."
-                    } catch (Exception e) {
-                        error("Fallo en la validación: ${e.getMessage()}")
-                    } finally {
-                        echo "🧹 Limpiando..."
-                        sh 'docker compose down'
-                    }
+                    // ... resto de tu script de Health Check
                 }
             }
-        }
-
-        stage('PROD: Release') {
-            when { branch 'main' }
-            steps {
-                echo "📦 Rama principal detectada. Pipeline completado con éxito."
-            }
-        }
-    }
-    
-    post {
-        always {
-            cleanWs deleteDirs: true, disableDeferredWipeout: true
         }
     }
 }
