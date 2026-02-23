@@ -15,3 +15,4 @@ RUN apt-get update \
 
 EXPOSE 8080 50000
 
+# asdasdasdas
