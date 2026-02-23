@@ -58,17 +58,23 @@ const router = createRouter({
     },
     {
       path: '/ventas',
-      name: 'sales',
-      component: () => import('@/views/SalesView.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/ventas/nueva',
-      name: 'ventas-nueva',
-      component: () => import('@/views/sales/SalesRecord.vue'),
-      meta: { requiresAuth: true }
-    },
-
+      component: () => import('@/views/sales/SalesLayout.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'sales-list',
+          component: () => import('@/views/sales/SalesList.vue'),
+          meta: { title: 'Listado de Ventas' }
+        },
+        {
+          path: 'crear',
+          name: 'sales-create',
+          component: () => import('@/views/sales/SalesCreate.vue'),
+          meta: { title: 'Crear Venta' }
+        },
+      ]    
+    },      
     {
       path: '/clientes',
       name: 'customers',
