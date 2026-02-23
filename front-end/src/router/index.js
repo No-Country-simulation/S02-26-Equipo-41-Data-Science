@@ -63,6 +63,13 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/ventas/nueva',
+      name: 'ventas-nueva',
+      component: () => import('@/views/sales/SalesRecord.vue'),
+      meta: { requiresAuth: true }
+    },
+
+    {
       path: '/clientes',
       name: 'customers',
       component: () => import('@/views/CustomersView.vue'),
