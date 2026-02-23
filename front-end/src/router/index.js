@@ -46,7 +46,14 @@ const router = createRouter({
           component: () => import('@/views/inventory/InventoryEdit.vue'),
           meta: { title: 'Editar Producto' },
           props: true
-        }
+        },
+        {
+          path: ':id/ajustar-stock',
+          name: 'inventory-adjust-stock',
+          component: () => import('@/views/inventory/InventoryStockAdjust.vue'),
+          meta: { title: 'Ajustar Stock' },
+          props: true,
+        },
       ]
     },
     {
@@ -55,6 +62,13 @@ const router = createRouter({
       component: () => import('@/views/SalesView.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/ventas/nueva',
+      name: 'ventas-nueva',
+      component: () => import('@/views/sales/SalesRecord.vue'),
+      meta: { requiresAuth: true }
+    },
+
     {
       path: '/clientes',
       name: 'customers',

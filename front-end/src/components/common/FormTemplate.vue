@@ -328,6 +328,7 @@
                       <BaseButton
                         type="button"
                         variant="secondary"
+                        copy
                         icon-left="upload"
                         @click="$refs[`file-${field.name}`][0].click()"
                       >
@@ -365,6 +366,7 @@
           <BaseButton
             v-if="config.cancelButton.show"
             type="button"
+            copy
             variant="secondary"
             @click="handleCancel"
           >
@@ -375,6 +377,7 @@
             :variant="config.submitButton.variant"
             :icon-left="config.submitButton.icon"
             :loading="isSubmitting"
+            copy
           >
             {{ config.submitButton.text }}
           </BaseButton>

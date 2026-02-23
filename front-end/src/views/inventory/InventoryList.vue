@@ -13,61 +13,11 @@
       <BaseButton
         variant="primary"
         icon-left="add"
+        copy
         @click="goToCreate"
       >
         Agregar Producto
       </BaseButton>
-    </div>
-
-    <!-- Cards de estadísticas -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <div class="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
-          Total Productos
-        </p>
-        <div class="flex items-end justify-between">
-          <p class="text-3xl font-black text-gray-900 dark:text-white">{{ stats.total }}</p>
-          <span class="material-symbols-outlined text-gray-200 dark:text-gray-700 text-4xl">
-            inventory_2
-          </span>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-        <p class="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-2">
-          Stock Bajo
-        </p>
-        <div class="flex items-end justify-between">
-          <p class="text-3xl font-black text-orange-500">{{ stats.lowStock }}</p>
-          <span class="material-symbols-outlined text-orange-100 dark:text-orange-900/20 text-4xl">
-            warning
-          </span>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-        <p class="text-[10px] font-black text-red-500 uppercase tracking-widest mb-2">
-          Sin Stock
-        </p>
-        <div class="flex items-end justify-between">
-          <p class="text-3xl font-black text-red-500">{{ stats.outOfStock }}</p>
-          <span class="material-symbols-outlined text-red-100 dark:text-red-900/20 text-4xl">
-            error
-          </span>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm border-l-4 border-l-primary">
-        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
-          Valor Inventario
-        </p>
-        <div class="flex items-end justify-between">
-          <p class="text-3xl font-black text-primary">{{ stats.totalValue }}</p>
-          <span class="material-symbols-outlined text-primary/10 text-4xl">
-            payments
-          </span>
-        </div>
-      </div>
     </div>
 
     <!-- Filtros -->
@@ -191,6 +141,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import BaseButton from '@/components/common/BaseButton.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import TableFilters from '@/components/common/TableFilters.vue'
@@ -199,6 +150,7 @@ import { useInventoryStore } from '@/stores/inventory'
 
 const router = useRouter()
 const inventoryStore = useInventoryStore()
+const { products } = storeToRefs(inventoryStore)
 
 // Configuración de tabla
 const tableConfig = createTable()
@@ -246,8 +198,6 @@ const pagination = ref({
   totalPages: 1
 })
 
-// Estadísticas
-const stats = computed(() => inventoryStore.stats)
 
 // Productos filtrados y paginados
 const paginatedProducts = computed(() => {
@@ -322,7 +272,11 @@ const getStockLabel = (stock) => {
 }
 
 // Cargar productos al montar
-onMounted(() => {
-  inventoryStore.fetchProducts()
+onMounted(async () => {
+  // Solo fetch si el array está vacío (primera carga)
+  if (products.value.length === 0) {
+    await inventoryStore.fetchProducts()
+  }
+  // Si ya hay productos, NO hacer fetch (mantener los cambios locales)
 })
 </script>
