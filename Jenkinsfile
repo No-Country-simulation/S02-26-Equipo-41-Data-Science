@@ -13,6 +13,8 @@ pipeline {
                         } 
                     }
                     steps { 
+                        // Descarga el código fuente en el contenedor
+                        checkout scm 
                         dir('front-end') { 
                             sh 'npm install && npx vitest run --passWithNoTests' 
                         } 
@@ -26,6 +28,8 @@ pipeline {
                         } 
                     }
                     steps { 
+                        // Descarga el código fuente en el contenedor
+                        checkout scm 
                         dir('backend') { 
                             sh 'npm install && npm run test -- --passWithNoTests' 
                         } 
@@ -38,14 +42,15 @@ pipeline {
             agent {
                 docker {
                     image 'docker:latest'
-                    // El entrypoint vacío es vital para que Jenkins pueda ejecutar los comandos sh
+                    // El socket de docker es necesario para que el contenedor hijo hable con el daemon de Docker
                     args '-u 0:0 --entrypoint="" -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
+                // Descarga el código para tener acceso al docker-compose.yml
+                checkout scm 
                 script {
                     echo "🧹 Limpiando colisiones de nombres y contenedores previos..."
-                    // Esta línea borra los contenedores por nombre para evitar el error "Conflict. Name in use"
                     sh 'docker rm -f frontend-container backend-container nocountry-postgres || true'
                     sh 'docker compose down --remove-orphans || true'
                     
@@ -60,7 +65,6 @@ pipeline {
                         count=0
                         while [ $count -lt 12 ]; do
                             echo "Probando conexión a http://localhost:3000/health... Intento $((count+1))/12"
-                            # Usamos wget dentro del contenedor para verificar que el servicio responde
                             if docker exec backend-container wget -qO- http://localhost:3000/health > /dev/null; then
                                 echo "✅ EL BACKEND RESPONDE CORRECTAMENTE"
                                 exit 0
