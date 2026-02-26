@@ -1,13 +1,7 @@
 <template>
   <div class="max-w-4xl mx-auto px-8 pb-8">
     <!-- Back button -->
-    <router-link
-      to="/inventario"
-      class="flex items-center gap-1 text-primary text-sm font-semibold mb-6 hover:underline"
-    >
-      <span class="material-symbols-outlined text-sm">arrow_back</span>
-      Volver al inventario
-    </router-link>
+    <BaseBreadcrumb :items="breadcrumbItems" />
 
     <!-- Form using FormTemplate -->
     <FormTemplate
@@ -15,17 +9,35 @@
       @submit="handleSubmit"
       @cancel="handleCancel"
     />
+
+    <BaseModal
+      :show="showCancelModal"
+      type="warning"
+      title="¿Descartar cambios?"
+      description="Los datos ingresados no se guardarán. ¿Estás seguro de que deseas salir?"
+      button1Title="Cancelar"
+      button2Title="Sí, descartar"
+      @action1="showCancelModal = false" 
+      @action2="confirmCancel"
+    />
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import FormTemplate from '@/components/common/FormTemplate.vue'
+import BaseBreadcrumb from '@/components/common/BaseBreadcrumb.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import { createForm } from '@/utils/FormBuilder'
 import { useInventoryStore } from '@/stores/inventory'
+import { inventoryBreadcrumbs } from '@/utils/breadcrumbs'
+import { toast } from '@/utils/toast'
 
 const router = useRouter()
 const inventoryStore = useInventoryStore()
+const breadcrumbItems = inventoryBreadcrumbs.create()
+const showCancelModal = ref(false)
 
 // Configuración del formulario usando Builder
 const formConfig = createForm()
@@ -109,20 +121,33 @@ const formConfig = createForm()
 
   .build()
 
-// Handlers
-const handleSubmit = async (formData) => {
-  try {
-    await inventoryStore.createProduct(formData)
-    router.push({ name: 'inventory-list' })
-  } catch (error) {
-    console.error('Error creating product:', error)
-    alert('Error al crear el producto')
-  }
+const handleCancel = () => {
+  // Aquí podrías validar si el formulario está sucio (dirty) antes de mostrar el modal.
+  // Por ahora, asumimos que siempre mostramos la advertencia.
+  showCancelModal.value = true
 }
 
-const handleCancel = () => {
-  if (confirm('¿Descartar los cambios?')) {
-    router.push({ name: 'inventory-list' })
+// Esta función se dispara cuando el usuario confirma en el BaseModal que SÍ quiere salir
+const confirmCancel = () => {
+  showCancelModal.value = false
+  // Regresar a la lista de inventario
+  router.push('/inventario') 
+}
+
+// --- LÓGICA DE GUARDADO ---
+
+// Esta función se dispara cuando el formulario es válido y se envía
+const handleSubmit = async (formData) => {
+  try {
+    // 1. Llamada a tu store/API
+    await inventoryStore.createProduct(formData)
+    console.log('Datos a guardar:', formData)
+    toast.success('Producto registrado correctamente en el inventario')
+    router.push('/inventario')
+
+  } catch (error) {
+    console.error('Error al guardar:', error)
+    toast.error('Ocurrió un problema al intentar guardar el producto. Inténtalo de nuevo.')
   }
 }
 </script>

@@ -1,4 +1,5 @@
 pipeline {
+<<<<<<< HEAD
 <<<<<<< Updated upstream
     agent any
     
@@ -11,9 +12,15 @@ pipeline {
     triggers { githubPush() }
     
 >>>>>>> Stashed changes
+=======
+    agent none 
+    triggers { githubPush() }
+    
+>>>>>>> 0273c1a85eda11b5c658c1955da4f9f76d04da13
     stages {
-        stage('Análisis y Tests (CI)') {
+        stage('CI: Unit Tests') {
             parallel {
+<<<<<<< HEAD
 <<<<<<< Updated upstream
                 stage('Frontend') {
                     // Solo corre si hay cambios en la carpeta front-end
@@ -48,16 +55,42 @@ pipeline {
                 stage('Backend Check') {
                     when { branch 'development' }
                     agent { docker { image 'node:20-alpine'; args '-u 0:0' } }
+=======
+                stage('Frontend Check') {
+                    agent { 
+                        docker { 
+                            image 'node:20-alpine'
+                            args '-u 0:0' 
+                        } 
+                    }
+                    steps { 
+                        dir('front-end') { 
+                            sh 'npm install && npx vitest run --passWithNoTests' 
+                        } 
+                    }
+                }
+                stage('Backend Check') {
+                    agent { 
+                        docker { 
+                            image 'node:20-alpine'
+                            args '-u 0:0' 
+                        } 
+                    }
+>>>>>>> 0273c1a85eda11b5c658c1955da4f9f76d04da13
                     steps { 
                         dir('backend') { 
                             sh 'npm install && npm run test -- --passWithNoTests' 
                         } 
+<<<<<<< HEAD
 >>>>>>> Stashed changes
+=======
+>>>>>>> 0273c1a85eda11b5c658c1955da4f9f76d04da13
                     }
                 }
             }
         }
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
         stage('Build & Validate Images') {
             when { 
@@ -72,11 +105,19 @@ pipeline {
                     image 'docker:latest' 
                     args '-u 0:0 --entrypoint="" -v /var/run/docker.sock:/var/run/docker.sock -e HOME=/tmp'
 >>>>>>> Stashed changes
+=======
+        stage('CD: Integration Test & Health Check') {
+            agent {
+                docker {
+                    image 'docker:latest'
+                    // El entrypoint vacío es vital para que Jenkins pueda ejecutar los comandos sh
+                    args '-u 0:0 --entrypoint="" -v /var/run/docker.sock:/var/run/docker.sock'
+>>>>>>> 0273c1a85eda11b5c658c1955da4f9f76d04da13
                 }
             }
             steps {
-                echo "🚀 Validando construcción de imágenes Docker..."
                 script {
+<<<<<<< HEAD
 <<<<<<< Updated upstream
                     // Validamos Backend
                     dir('backend') {
@@ -85,6 +126,40 @@ pipeline {
                     // Validamos Frontend
                     dir('front-end') {
                         sh 'docker build -t s02-frontend:test .'
+=======
+                    echo "🧹 Limpiando colisiones de nombres y contenedores previos..."
+                    // Esta línea borra los contenedores por nombre para evitar el error "Conflict. Name in use"
+                    sh 'docker rm -f frontend-container backend-container nocountry-postgres || true'
+                    sh 'docker compose down --remove-orphans || true'
+                    
+                    echo "🛠️ Construyendo imagen de Backend..."
+                    sh 'docker compose build --no-cache backend'
+                    
+                    echo "🚀 Levantando servicios..."
+                    sh 'docker compose up -d --force-recreate'
+                    
+                    echo "🔍 Iniciando validación de salud (Health Check)..."
+                    def healthCheck = sh(script: '''
+                        count=0
+                        while [ $count -lt 12 ]; do
+                            echo "Probando conexión a http://localhost:3000/health... Intento $((count+1))/12"
+                            # Usamos wget dentro del contenedor para verificar que el servicio responde
+                            if docker exec backend-container wget -qO- http://localhost:3000/health > /dev/null; then
+                                echo "✅ EL BACKEND RESPONDE CORRECTAMENTE"
+                                exit 0
+                            fi
+                            sleep 5
+                            count=$((count+1))
+                        done
+                        echo "❌ EL BACKEND NO RESPONDIÓ A TIEMPO"
+                        exit 1
+                    ''', returnStatus: true)
+
+                    if (healthCheck != 0) {
+                        echo "⚠️ Extrayendo logs del backend para depuración:"
+                        sh 'docker logs backend-container'
+                        error("Falló el Health Check: El backend no está saludable.")
+>>>>>>> 0273c1a85eda11b5c658c1955da4f9f76d04da13
                     }
 =======
                     echo "🧹 Limpiando imágenes previas y forzando build sin caché..."
@@ -135,19 +210,12 @@ pipeline {
 >>>>>>> Stashed changes
                 }
             }
+            post {
+                always {
+                    echo "🧹 Limpiando entorno de integración..."
+                    sh 'docker compose down'
+                }
+            }
         }
     }
-    
-    post {
-        success {
-            echo "✅ ¡Todo pasó perfectamente! Frontend y Backend están validados."
-        }
-        failure {
-            echo "❌ Algo falló. Revisa los logs arriba."
-        }
-        always {
-            cleanWs()
-            echo "Pipeline finalizado en ${env.BRANCH_NAME}"
-        }
-    }
-}
+} 
