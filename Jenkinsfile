@@ -53,45 +53,40 @@ pipeline {
                     sh 'docker compose down --remove-orphans || true'
                     sh 'docker rm -f frontend-container backend-container nocountry-postgres || true'
                     
-                    echo "📝 Creando archivo de entorno persistente..."
+                    echo "📝 Creando archivo de entorno..."
                     sh 'echo "DATABASE_URL=postgresql://user:password@nocountry-postgres:5432/db" > .env'
+                    sh 'echo "PORT=3000" >> .env'
                     
                     echo "🛠️ Construyendo e iniciando servicios..."
                     sh 'docker compose up -d --build --force-recreate'
                     
-                    echo "🔍 Iniciando validación de salud ruidosa..."
+                    echo "🔍 Iniciando validación de salud avanzada..."
                     def healthCheck = sh(script: '''
                         count=0
                         while [ $count -lt 15 ]; do
                             echo "-----------------------------------------------------"
                             echo "🔍 Intento $((count+1))/15..."
                             
-                            # 1. Intentar wget con salida de error visible
-                            if docker exec backend-container wget -qO- http://localhost:3000/health; then
+                            # Probamos con 127.0.0.1 (más directo que localhost en Alpine)
+                            if docker exec backend-container wget -qO- http://127.0.0.1:3000/health; then
                                 echo "✅ EL BACKEND RESPONDE CORRECTAMENTE"
                                 exit 0
                             fi
 
-                            # 2. Si falla, ver qué dice el proceso de Node
-                            echo "⚠️ El puerto 3000 aún no responde. Revisando logs internos:"
-                            docker logs --tail 10 backend-container
+                            # Si falla, diagnóstico de red
+                            echo "⚠️ El puerto 3000 no responde aún."
+                            echo "Puertos abiertos dentro del contenedor:"
+                            docker exec backend-container netstat -tuln || echo "netstat no disponible"
                             
-                            # 3. Verificar si el contenedor sigue vivo
-                            STATUS=$(docker inspect -f '{{.State.Status}}' backend-container)
-                            if [ "$STATUS" != "running" ]; then
-                                echo "❌ ERROR: El contenedor murió con estado: $STATUS"
-                                exit 1
-                            fi
-
                             sleep 10
                             count=$((count+1))
                         done
-                        echo "❌ TIMEOUT: El backend nunca estuvo disponible."
+                        echo "❌ ERROR: El backend nunca respondió."
                         exit 1
                     ''', returnStatus: true)
 
                     if (healthCheck != 0) {
-                        error("Falló el Health Check: Revisa los logs arriba para ver el error de NestJS.")
+                        error("Falló el Health Check: El sistema no es estable.")
                     }
                 }
             }
