@@ -30,7 +30,7 @@ const router = createRouter({
         {
           path: 'crear',
           name: 'inventory-create',
-          component: () => import('@/views/inventory/InventoryCreate.vue'),
+          component: () => import('@/views/inventory/InventoryView.vue'), // Mismo componente
           meta: { title: 'Crear Producto' }
         },
         {
@@ -43,9 +43,9 @@ const router = createRouter({
         {
           path: ':id/editar',
           name: 'inventory-edit',
-          component: () => import('@/views/inventory/InventoryEdit.vue'),
+          component: () => import('@/views/inventory/InventoryView.vue'), // Mismo componente
           meta: { title: 'Editar Producto' },
-          props: true
+          props: true // Esto pasa el :id como prop automáticamente
         },
         {
           path: ':id/ajustar-stock',
@@ -58,17 +58,23 @@ const router = createRouter({
     },
     {
       path: '/ventas',
-      name: 'sales',
-      component: () => import('@/views/SalesView.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/ventas/nueva',
-      name: 'ventas-nueva',
-      component: () => import('@/views/sales/SalesRecord.vue'),
-      meta: { requiresAuth: true }
-    },
-
+      component: () => import('@/views/sales/SalesLayout.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'sales-list',
+          component: () => import('@/views/sales/SalesList.vue'),
+          meta: { title: 'Listado de Ventas' }
+        },
+        {
+          path: 'crear',
+          name: 'sales-create',
+          component: () => import('@/views/sales/SalesCreate.vue'),
+          meta: { title: 'Crear Venta' }
+        },
+      ]    
+    },      
     {
       path: '/clientes',
       name: 'customers',
