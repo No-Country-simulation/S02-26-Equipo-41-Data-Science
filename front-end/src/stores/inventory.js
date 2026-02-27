@@ -212,6 +212,66 @@ export const useInventoryStore = defineStore('inventory', () => {
     }
   }
 
+  async function saveProduct(productData, productVariants) {
+    loading.value = true;
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Convertimos el ID a número de forma segura
+      const isEdit = !!productData.id;
+      const numericProductId = isEdit ? Number(productData.id) : null;
+
+      if (isEdit) {
+        // 1. Actualizar modelo base
+        const pIndex = products.value.findIndex(p => p.id === numericProductId);
+        if (pIndex !== -1) {
+          products.value[pIndex] = { 
+            ...products.value[pIndex], 
+            ...productData, 
+            id: numericProductId, // Forzamos Number
+            updatedAt: new Date().toISOString() 
+          };
+        }
+        
+        // 2. Limpiar variantes viejas y asociar las nuevas asegurando el tipado
+        variants.value = variants.value.filter(v => Number(v.productId) !== numericProductId);
+        const variantsWithId = productVariants.map(v => ({ 
+          ...v, 
+          productId: numericProductId,
+          price: Number(v.price) || 0, // Doble validación en la persistencia
+          stock: Number(v.stock) || 0
+        }));
+        variants.value.push(...variantsWithId);
+
+      } else {
+        // Lógica de Creación
+        const newId = Math.max(0, ...products.value.map(p => p.id)) + 1;
+        products.value.push({ 
+          ...productData, 
+          id: newId, 
+          createdAt: new Date().toISOString() 
+        });
+        
+        const newVariants = productVariants.map(v => ({ 
+          ...v, 
+          id: Date.now() + Math.random(), 
+          productId: newId,
+          price: Number(v.price) || 0,
+          stock: Number(v.stock) || 0
+        }));
+        variants.value.push(...newVariants);
+      }
+      
+      return true;
+    } catch (err) {
+      error.value = "Error al guardar el producto";
+      console.error(err);
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   /**
    * Obtener un producto por ID (con variantes)
    */
@@ -305,6 +365,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     
     // Actions
     fetchProducts,
+    saveProduct,
     getProductById,
     getFilteredProducts,
     clearError
