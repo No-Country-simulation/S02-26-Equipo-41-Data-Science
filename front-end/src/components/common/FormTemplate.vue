@@ -350,13 +350,11 @@
                 </div>
 
                 <!-- Campo personalizado -->
-                <component
-                  v-else-if="field.type === 'custom'"
-                  :is="field.component"
-                  v-model="formData[field.name]"
-                  v-bind="field.props"
-                  :class="field.colspan > 1 ? `md:col-span-${field.colspan}` : ''"
-                />
+                <template v-if="field.type === 'custom'">
+                  <div :class="field.columns || 'col-span-full'">
+                    <slot :name="`field-${field.name}`" :field="field"></slot>
+                  </div>
+                </template>
               </template>
             </div>
           </div>

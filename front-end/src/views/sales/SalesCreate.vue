@@ -1,11 +1,5 @@
 <template>
   <div class="page-container">
-    <AppNavbar
-      subtitle="Gestión de Ventas"
-      logo-icon="point_of_sale"
-      :user-location="sucursalActiva"
-    />
-
     <main class="main-layout">
       <!-- ══════════ PANEL IZQUIERDO ══════════ -->
       <section class="left-panel custom-scrollbar">
@@ -288,7 +282,6 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import AppNavbar from '@/components/common/AppNavbar.vue'
 
 // ── Props ──────────────────────────────────────────
 const sucursalActiva = ref('Lima Central')

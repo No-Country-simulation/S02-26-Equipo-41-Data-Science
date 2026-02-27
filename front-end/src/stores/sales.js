@@ -1,127 +1,340 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-/**
- * Store de Ventas — DATAMARK
- * Maneja el estado del carrito, productos, clientes y registro de ventas
- */
 export const useSalesStore = defineStore('sales', () => {
-
-  // ── Estado ────────────────────────────────────────
-  const cartItems   = ref([])
-  const saleNotes   = ref('')
-  const selectedClient  = ref(null)
-  const selectedPayment = ref('cash')
-  const salesHistory    = ref([])
-
-  // ── Productos (reemplazar con llamada a API) ───────
-  const products = ref([
-    { id: 1, name: 'Camisa Oxford Slim Fit Celeste',      sku: 'OX-102-BLU', price: 25000, stock: 45, category: 'Camisas'    },
-    { id: 2, name: 'Pantalón Gabardina Beige - Talle 42', sku: 'GB-42-BEI',  price: 32500, stock: 3,  category: 'Pantalones' },
-    { id: 3, name: 'Zapatilla Running Pro',               sku: 'ZR-PRO-001', price: 89000, stock: 12, category: 'Calzado'    },
-    { id: 4, name: 'Polo Slim Fit Negro',                 sku: 'PS-N-001',   price: 18500, stock: 28, category: 'Polos'      },
-    { id: 5, name: 'Jean Skinny Azul - Talle 40',         sku: 'JS-AZ-40',   price: 45000, stock: 7,  category: 'Pantalones' },
-  ])
-
-  // ── Clientes (reemplazar con llamada a API) ────────
+  // ==========================================
+  // STATE - CARRITO
+  // ==========================================
+  const cart = ref([])
+  const selectedPaymentMethod = ref('efectivo')
+  const notes = ref('')
+  
+  // ==========================================
+  // STATE - CLIENTE
+  // ==========================================
+  const selectedClient = ref(null)
+  const searchClientQuery = ref('')
+  
+  // ==========================================
+  // CLIENTES MOCK
+  // ==========================================
   const clients = ref([
-    { id: 1, name: 'Juan Pérez',   document: 'DNI: 35.123.456',    location: 'Lima, CABA',  type: 'frequent',  typeLabel: 'Frecuente'  },
-    { id: 2, name: 'María García', document: 'RUC: 27-44556677-9', location: 'Arequipa',    type: 'wholesale', typeLabel: 'Mayorista'  },
-    { id: 3, name: 'Carlos López', document: 'DNI: 22.987.654',    location: 'Cusco',        type: 'final',    typeLabel: 'Final'      },
+    {
+      id: 1,
+      name: 'Juan Pérez',
+      documentType: 'DNI',
+      documentNumber: '35123456',
+      location: 'Buenos Aires, CABA',
+      clientType: 'Frecuente'
+    },
+    {
+      id: 2,
+      name: 'María García',
+      documentType: 'CUIT',
+      documentNumber: '27-44556677-9',
+      location: 'Rosario, Santa Fe',
+      clientType: 'Mayorista'
+    },
+    {
+      id: 3,
+      name: 'Carlos López',
+      documentType: 'DNI',
+      documentNumber: '22987654',
+      location: 'Córdoba Capital',
+      clientType: 'Final'
+    }
   ])
 
-  // ── Computed ──────────────────────────────────────
-  const cartCount = computed(() => cartItems.value.reduce((s, i) => s + i.qty, 0))
-  const subtotal  = computed(() => cartItems.value.reduce((s, i) => s + i.price * i.qty, 0))
-  const igv       = computed(() => Math.round(subtotal.value * 0.18))
-  const total     = computed(() => subtotal.value + igv.value)
-  const isEmpty   = computed(() => cartItems.value.length === 0)
+  // ==========================================
+  // GETTERS - CARRITO
+  // ==========================================
+  
+  /**
+   * Subtotal (sin IVA)
+   */
+  const subtotal = computed(() => {
+    return cart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  })
 
-  // ── Acciones del carrito ──────────────────────────
-  const addToCart = (product) => {
-    const existing = cartItems.value.find(i => i.id === product.id)
-    if (existing) {
-      if (existing.qty < product.stock) existing.qty++
+  /**
+   * IVA (21%)
+   */
+  const iva = computed(() => {
+    return subtotal.value * 0.21
+  })
+
+  /**
+   * Total (subtotal + IVA)
+   */
+  const total = computed(() => {
+    return subtotal.value + iva.value
+  })
+
+  /**
+   * Cantidad total de items
+   */
+  const totalItems = computed(() => {
+    return cart.value.reduce((sum, item) => sum + item.quantity, 0)
+  })
+
+  /**
+   * ¿Carrito vacío?
+   */
+  const isEmpty = computed(() => {
+    return cart.value.length === 0
+  })
+
+  /**
+   * Cliente actual (seleccionado o consumidor final)
+   */
+  const currentClient = computed(() => {
+    return selectedClient.value || {
+      id: null,
+      name: 'Consumidor Final',
+      documentType: '',
+      documentNumber: '',
+      location: '',
+      clientType: 'Final'
+    }
+  })
+
+  /**
+   * Clientes filtrados por búsqueda
+   */
+  const filteredClients = computed(() => {
+    if (!searchClientQuery.value) return clients.value
+    
+    const search = searchClientQuery.value.toLowerCase()
+    return clients.value.filter(client =>
+      client.name.toLowerCase().includes(search) ||
+      client.documentNumber.includes(search)
+    )
+  })
+
+  // ==========================================
+  // ACTIONS - CARRITO
+  // ==========================================
+  
+  /**
+   * Agregar producto al carrito
+   */
+  function addToCart(variant, productName, quantity = 1) {
+    // Verificar si ya existe en el carrito
+    const existingItem = cart.value.find(item => item.variantId === variant.id)
+    
+    if (existingItem) {
+      // Aumentar cantidad si no excede el stock
+      const newQuantity = existingItem.quantity + quantity
+      if (newQuantity <= variant.stock) {
+        existingItem.quantity = newQuantity
+      } else {
+        throw new Error(`Stock insuficiente. Disponible: ${variant.stock}`)
+      }
+    } else {
+      // Agregar nuevo item
+      if (quantity > variant.stock) {
+        throw new Error(`Stock insuficiente. Disponible: ${variant.stock}`)
+      }
+      
+      cart.value.push({
+        variantId: variant.id,
+        productId: variant.productId,
+        sku: variant.sku,
+        name: productName, // Nombre del producto base
+        color: variant.color,
+        size: variant.size,
+        price: variant.price,
+        quantity: quantity,
+        maxStock: variant.stock,
+        hasLowStock: variant.stock < variant.minStock
+      })
+    }
+  }
+
+  /**
+   * Remover producto del carrito
+   */
+  function removeFromCart(variantId) {
+    const index = cart.value.findIndex(item => item.variantId === variantId)
+    if (index !== -1) {
+      cart.value.splice(index, 1)
+    }
+  }
+
+  /**
+   * Actualizar cantidad de un item
+   */
+  function updateQuantity(variantId, newQuantity) {
+    const item = cart.value.find(i => i.variantId === variantId)
+    if (!item) return
+    
+    if (newQuantity <= 0) {
+      removeFromCart(variantId)
       return
     }
-    cartItems.value.push({ ...product, qty: 1 })
-  }
-
-  const removeFromCart = (productId) => {
-    cartItems.value = cartItems.value.filter(i => i.id !== productId)
-  }
-
-  const increaseQty = (item) => {
-    const found = cartItems.value.find(i => i.id === item.id)
-    if (found && found.qty < found.stock) found.qty++
-  }
-
-  const decreaseQty = (item) => {
-    const found = cartItems.value.find(i => i.id === item.id)
-    if (found && found.qty > 1) found.qty--
-    else if (found && found.qty === 1) removeFromCart(item.id)
-  }
-
-  const clearCart = () => {
-    cartItems.value    = []
-    saleNotes.value    = ''
-    selectedClient.value = null
-    selectedPayment.value = 'cash'
-  }
-
-  // ── Confirmar venta ───────────────────────────────
-  const confirmSale = () => {
-    if (isEmpty.value) return null
-
-    const sale = {
-      id:        Date.now(),
-      date:      new Date().toISOString(),
-      items:     [...cartItems.value],
-      client:    selectedClient.value,
-      payment:   selectedPayment.value,
-      notes:     saleNotes.value,
-      subtotal:  subtotal.value,
-      igv:       igv.value,
-      total:     total.value,
+    
+    if (newQuantity > item.maxStock) {
+      throw new Error(`Stock insuficiente. Disponible: ${item.maxStock}`)
     }
-
-    salesHistory.value.unshift(sale)
-
-    // Descontar stock
-    sale.items.forEach(cartItem => {
-      const product = products.value.find(p => p.id === cartItem.id)
-      if (product) product.stock -= cartItem.qty
-    })
-
-    clearCart()
-    return sale
+    
+    item.quantity = newQuantity
   }
 
-  // ── Búsqueda ──────────────────────────────────────
-  const searchProducts = (query) => {
-    const q = query.toLowerCase().trim()
-    if (!q) return products.value
-    return products.value.filter(p =>
-      p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
-    )
+  /**
+   * Incrementar cantidad
+   */
+  function incrementQuantity(variantId) {
+    const item = cart.value.find(i => i.variantId === variantId)
+    if (!item) return
+    
+    if (item.quantity < item.maxStock) {
+      item.quantity++
+    } else {
+      throw new Error(`Stock insuficiente. Disponible: ${item.maxStock}`)
+    }
   }
 
-  const searchClients = (query) => {
-    const q = query.toLowerCase().trim()
-    if (!q) return clients.value
-    return clients.value.filter(c =>
-      c.name.toLowerCase().includes(q) || c.document.toLowerCase().includes(q)
-    )
+  /**
+   * Decrementar cantidad
+   */
+  function decrementQuantity(variantId) {
+    const item = cart.value.find(i => i.variantId === variantId)
+    if (!item) return
+    
+    if (item.quantity > 1) {
+      item.quantity--
+    } else {
+      removeFromCart(variantId)
+    }
+  }
+
+  /**
+   * Limpiar carrito
+   */
+  function clearCart() {
+    cart.value = []
+    selectedPaymentMethod.value = 'efectivo'
+    notes.value = ''
+  }
+
+  // ==========================================
+  // ACTIONS - CLIENTE
+  // ==========================================
+  
+  /**
+   * Seleccionar cliente
+   */
+  function selectClient(client) {
+    selectedClient.value = client
+  }
+
+  /**
+   * Quitar cliente seleccionado (volver a consumidor final)
+   */
+  function removeClient() {
+    selectedClient.value = null
+  }
+
+  /**
+   * Buscar cliente
+   */
+  function searchClient(query) {
+    searchClientQuery.value = query
+  }
+
+  // ==========================================
+  // ACTIONS - MÉTODOS DE PAGO
+  // ==========================================
+  
+  /**
+   * Seleccionar método de pago
+   */
+  function selectPaymentMethod(method) {
+    selectedPaymentMethod.value = method
+  }
+
+  // ==========================================
+  // ACTIONS - VENTA
+  // ==========================================
+  
+  /**
+   * Confirmar venta
+   */
+  async function confirmSale() {
+    if (isEmpty.value) {
+      throw new Error('El carrito está vacío')
+    }
+    
+    try {
+      // TODO: Llamada al API para registrar la venta
+      const saleData = {
+        clientId: currentClient.value.id,
+        items: cart.value.map(item => ({
+          variantId: item.variantId,
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+          subtotal: item.price * item.quantity
+        })),
+        paymentMethod: selectedPaymentMethod.value,
+        subtotal: subtotal.value,
+        iva: iva.value,
+        total: total.value,
+        notes: notes.value,
+        date: new Date().toISOString()
+      }
+      
+      // Simular llamada al API
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      console.log('Venta registrada:', saleData)
+      
+      // Limpiar estado después de confirmar
+      clearCart()
+      removeClient()
+      
+      return saleData
+    } catch (error) {
+      console.error('Error al confirmar venta:', error)
+      throw error
+    }
   }
 
   return {
     // State
-    cartItems, saleNotes, selectedClient, selectedPayment,
-    salesHistory, products, clients,
-    // Computed
-    cartCount, subtotal, igv, total, isEmpty,
-    // Actions
-    addToCart, removeFromCart, increaseQty, decreaseQty,
-    clearCart, confirmSale, searchProducts, searchClients,
+    cart,
+    selectedPaymentMethod,
+    notes,
+    selectedClient,
+    searchClientQuery,
+    clients,
+    
+    // Getters
+    subtotal,
+    iva,
+    total,
+    totalItems,
+    isEmpty,
+    currentClient,
+    filteredClients,
+    
+    // Actions - Carrito
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    incrementQuantity,
+    decrementQuantity,
+    clearCart,
+    
+    // Actions - Cliente
+    selectClient,
+    removeClient,
+    searchClient,
+    
+    // Actions - Pago
+    selectPaymentMethod,
+    
+    // Actions - Venta
+    confirmSale
   }
 })
