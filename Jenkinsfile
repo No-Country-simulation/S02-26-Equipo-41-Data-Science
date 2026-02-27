@@ -50,49 +50,48 @@ pipeline {
             steps {
                 script {
                     echo "🧹 Limpiando colisiones previas..."
-                    sh 'docker rm -f frontend-container backend-container nocountry-postgres || true'
                     sh 'docker compose down --remove-orphans || true'
+                    sh 'docker rm -f frontend-container backend-container nocountry-postgres || true'
                     
                     echo "📝 Creando archivo de entorno persistente..."
-                    // Esto asegura que Docker Compose inyecte la variable correctamente al contenedor
                     sh 'echo "DATABASE_URL=postgresql://user:password@nocountry-postgres:5432/db" > .env'
                     
-                    echo "🛠️ Construyendo imagen de Backend..."
-                    sh 'docker compose build --no-cache backend'
+                    echo "🛠️ Construyendo e iniciando servicios..."
+                    sh 'docker compose up -d --build --force-recreate'
                     
-                    echo "🚀 Levantando servicios..."
-                    sh 'docker compose up -d --force-recreate'
-                    
-                    echo "🔍 Iniciando validación de salud (Health Check)..."
+                    echo "🔍 Iniciando validación de salud ruidosa..."
                     def healthCheck = sh(script: '''
                         count=0
                         while [ $count -lt 15 ]; do
-                            echo "Esperando que el backend arranque... Intento $((count+1))/15"
+                            echo "-----------------------------------------------------"
+                            echo "🔍 Intento $((count+1))/15..."
                             
-                            # 1. Intentar conectar al endpoint de salud
-                            if docker exec backend-container wget -qO- http://localhost:3000/health > /dev/null 2>&1; then
+                            # 1. Intentar wget con salida de error visible
+                            if docker exec backend-container wget -qO- http://localhost:3000/health; then
                                 echo "✅ EL BACKEND RESPONDE CORRECTAMENTE"
                                 exit 0
                             fi
 
-                            # 2. Verificar si el contenedor colapsó
+                            # 2. Si falla, ver qué dice el proceso de Node
+                            echo "⚠️ El puerto 3000 aún no responde. Revisando logs internos:"
+                            docker logs --tail 10 backend-container
+                            
+                            # 3. Verificar si el contenedor sigue vivo
                             STATUS=$(docker inspect -f '{{.State.Status}}' backend-container)
                             if [ "$STATUS" != "running" ]; then
-                                echo "⚠️ Alerta: El contenedor está en estado [$STATUS]"
-                                echo "--- Últimos 10 logs del Backend ---"
-                                docker logs --tail 10 backend-container
-                                echo "-----------------------------------"
+                                echo "❌ ERROR: El contenedor murió con estado: $STATUS"
+                                exit 1
                             fi
 
                             sleep 10
                             count=$((count+1))
                         done
-                        echo "❌ ERROR: El backend no respondió después de 150 segundos."
+                        echo "❌ TIMEOUT: El backend nunca estuvo disponible."
                         exit 1
                     ''', returnStatus: true)
 
                     if (healthCheck != 0) {
-                        error("Falló el Health Check: El sistema no es estable.")
+                        error("Falló el Health Check: Revisa los logs arriba para ver el error de NestJS.")
                     }
                 }
             }
