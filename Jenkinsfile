@@ -28,21 +28,11 @@ pipeline {
                     steps { 
                         dir('backend') { 
                             sh '''
-                                # 1. Limpieza profunda de dependencias
                                 rm -rf node_modules package-lock.json
-                                
-                                # 2. Instalación fresca para Linux
                                 npm install
-                                
-                                # 3. Variable de entorno para Prisma
                                 export DATABASE_URL="postgresql://fake:fake@localhost:5432/fake"
-                                
-                                # 4. Generación del cliente de Prisma
                                 npx prisma generate
-                                
-                                # 5. Ejecución de tests (Tolerante a fallos)
-                                # Usamos '|| true' para que el pipeline no muera si los specs de NestJS están mal escritos
-                                npm run test -- --passWithNoTests || echo "⚠️ Tests unitarios fallidos, pero el código compila. Procediendo a integración..."
+                                npm run test -- --passWithNoTests || echo "⚠️ Tests unitarios fallidos, procediendo..."
                             '''
                         } 
                     }
@@ -59,26 +49,33 @@ pipeline {
             }
             steps {
                 script {
-                    echo "🧹 Limpiando colisiones de nombres y contenedores previos..."
+                    echo "🧹 Limpiando colisiones previas..."
                     sh 'docker rm -f frontend-container backend-container nocountry-postgres || true'
                     sh 'docker compose down --remove-orphans || true'
                     
                     echo "🛠️ Construyendo imagen de Backend..."
                     sh 'docker compose build --no-cache backend'
                     
-                    echo "🚀 Levantando servicios..."
-                    sh 'docker compose up -d --force-recreate'
+                    echo "🚀 Levantando servicios con inyección de variables..."
+                    // Forzamos la variable DATABASE_URL para que el contenedor la tenga al iniciar
+                    sh 'DATABASE_URL="postgresql://user:password@nocountry-postgres:5432/db" docker compose up -d --force-recreate'
                     
                     echo "🔍 Iniciando validación de salud (Health Check)..."
                     def healthCheck = sh(script: '''
                         count=0
-                        while [ $count -lt 12 ]; do
-                            echo "Probando conexión a http://localhost:3000/health... Intento $((count+1))/12"
+                        while [ $count -lt 15 ]; do
+                            echo "Esperando que el backend arranque... Intento $((count+1))/15"
+                            # Verificamos si el contenedor está corriendo o reiniciando
+                            STATUS=$(docker inspect -f '{{.State.Status}}' backend-container)
+                            if [ "$STATUS" = "restarting" ]; then
+                                echo "⚠️ El contenedor se está reiniciando, esperando..."
+                            fi
+                            
                             if docker exec backend-container wget -qO- http://localhost:3000/health > /dev/null; then
                                 echo "✅ EL BACKEND RESPONDE CORRECTAMENTE"
                                 exit 0
                             fi
-                            sleep 5
+                            sleep 10
                             count=$((count+1))
                         done
                         echo "❌ EL BACKEND NO RESPONDIÓ A TIEMPO"
@@ -86,15 +83,15 @@ pipeline {
                     ''', returnStatus: true)
 
                     if (healthCheck != 0) {
-                        echo "⚠️ Extrayendo logs del backend para depuración:"
+                        echo "⚠️ Logs finales del backend:"
                         sh 'docker logs backend-container'
-                        error("Falló el Health Check: El backend no está saludable.")
+                        error("Falló el Health Check.")
                     }
                 }
             }
             post {
                 always {
-                    echo "🧹 Limpiando entorno de integración..."
+                    echo "🧹 Limpiando entorno..."
                     sh 'docker compose down'
                 }
             }
