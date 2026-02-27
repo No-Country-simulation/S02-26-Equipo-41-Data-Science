@@ -28,16 +28,19 @@ pipeline {
                     steps { 
                         dir('backend') { 
                             sh '''
-                                # Forzamos instalación completa para asegurar ts-jest y dependencias de test
-                                npm install --include=dev
+                                # 1. Eliminamos rastro de instalaciones previas y el lock de Windows
+                                rm -rf node_modules package-lock.json
                                 
-                                # Seteamos variable ficticia para Prisma
+                                # 2. Instalación limpia para el entorno Linux de Jenkins
+                                npm install
+                                
+                                # 3. Variable ficticia obligatoria para que Prisma no falle
                                 export DATABASE_URL="postgresql://fake:fake@localhost:5432/fake"
                                 
-                                # Generamos el cliente
+                                # 4. Generación del cliente de Prisma
                                 npx prisma generate
                                 
-                                # Ejecutamos tests
+                                # 5. Ejecución de tests (ahora debería encontrar ts-jest sin problemas)
                                 npm run test -- --passWithNoTests
                             '''
                         } 
