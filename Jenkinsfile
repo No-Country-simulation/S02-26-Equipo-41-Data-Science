@@ -27,11 +27,17 @@ pipeline {
                     }
                     steps { 
                         dir('backend') { 
-                            // MODIFICACIÓN: Agregamos una DATABASE_URL ficticia para que Prisma genere el cliente sin protestar
                             sh '''
-                                npm install
+                                # Forzamos instalación completa para asegurar ts-jest y dependencias de test
+                                npm install --include=dev
+                                
+                                # Seteamos variable ficticia para Prisma
                                 export DATABASE_URL="postgresql://fake:fake@localhost:5432/fake"
+                                
+                                # Generamos el cliente
                                 npx prisma generate
+                                
+                                # Ejecutamos tests
                                 npm run test -- --passWithNoTests
                             '''
                         } 
