@@ -27,7 +27,8 @@ pipeline {
                     }
                     steps { 
                         dir('backend') { 
-                            sh 'npm install && npm run test -- --passWithNoTests' 
+                            // CORRECCIÓN: Se agrega npx prisma generate antes de los tests
+                            sh 'npm install && npx prisma generate && npm run test -- --passWithNoTests' 
                         } 
                     }
                 }
@@ -38,14 +39,12 @@ pipeline {
             agent {
                 docker {
                     image 'docker:latest'
-                    // El entrypoint vacío es vital para que Jenkins pueda ejecutar los comandos sh
                     args '-u 0:0 --entrypoint="" -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
                 script {
                     echo "🧹 Limpiando colisiones de nombres y contenedores previos..."
-                    // Esta línea borra los contenedores por nombre para evitar el error "Conflict. Name in use"
                     sh 'docker rm -f frontend-container backend-container nocountry-postgres || true'
                     sh 'docker compose down --remove-orphans || true'
                     
@@ -60,7 +59,6 @@ pipeline {
                         count=0
                         while [ $count -lt 12 ]; do
                             echo "Probando conexión a http://localhost:3000/health... Intento $((count+1))/12"
-                            # Usamos wget dentro del contenedor para verificar que el servicio responde
                             if docker exec backend-container wget -qO- http://localhost:3000/health > /dev/null; then
                                 echo "✅ EL BACKEND RESPONDE CORRECTAMENTE"
                                 exit 0
