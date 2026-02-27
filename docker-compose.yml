@@ -1,0 +1,44 @@
+services:
+  # La base de datos
+  db:
+    image: postgres:16
+    container_name: nocountry-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mvp
+    ports:
+      - '5432:5432'
+    volumes:
+      - nocountry_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mvp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Tu Backend (Corregido para esperar a la DB)
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend-container
+    ports:
+      - "3000:3000"
+    restart: on-failure
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Tu Frontend
+  frontend:
+    build: 
+      context: ./front-end
+      dockerfile: Dockerfile
+    container_name: frontend-container
+    ports:
+      - "8081:80"
+    restart: always
+
+volumes:
+  nocountry_pgdata:

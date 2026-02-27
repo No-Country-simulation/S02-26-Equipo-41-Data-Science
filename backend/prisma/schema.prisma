@@ -1,0 +1,168 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Tiempo {
+  tiempoID      Int      @id @default(autoincrement())
+  fecha         DateTime
+  dia           Int
+  mes           Int
+  anio          Int
+  diaSemana     String
+  esFinDeSemana Boolean
+
+  ventas  Venta[]
+  compras Compra[]
+}
+
+model Sucursal {
+  sucursalID Int    @id @default(autoincrement())
+  nombre     String
+  ciudad     String
+
+  vendedores Vendedor[]
+  ventas     Venta[]
+  compras    Compra[]
+}
+
+model Vendedor {
+  vendedorID Int    @id @default(autoincrement())
+  nombre     String
+
+  sucursalID Int
+  sucursal   Sucursal @relation(fields: [sucursalID], references: [sucursalID])
+
+  ventas Venta[]
+}
+
+model Cliente {
+  clienteID Int    @id @default(autoincrement())
+  nombre    String
+  dni       String
+  telefono  String
+
+  ventas Venta[]
+}
+
+model MetodoPago {
+  metodoPagoID Int    @id @default(autoincrement())
+  nombre       String
+
+  ventas  Venta[]
+  compras Compra[]
+}
+
+model Categoria {
+  categoriaID Int    @id @default(autoincrement())
+  nombre      String
+
+  productos Producto[]
+}
+
+model Producto {
+  productoID Int    @id @default(autoincrement())
+  nombre     String
+
+  categoriaID Int
+  categoria   Categoria @relation(fields: [categoriaID], references: [categoriaID])
+
+  variantes VarianteProducto[]
+}
+
+model VarianteProducto {
+  varianteID Int     @id @default(autoincrement())
+  talla      String?
+  color      String?
+  sku        String
+  precioVenta Float
+
+  productoID Int
+  producto   Producto @relation(fields: [productoID], references: [productoID])
+
+  detalleVentas  DetalleVenta[]
+  detalleCompras DetalleCompra[]
+}
+
+model Venta {
+  ventaID Int @id @default(autoincrement())
+
+  sucursalID   Int
+  vendedorID   Int
+  clienteID    Int
+  metodoPagoID Int
+  tiempoID     Int
+
+  hora       DateTime
+  totalVenta Float
+
+  sucursal   Sucursal   @relation(fields: [sucursalID], references: [sucursalID])
+  vendedor   Vendedor   @relation(fields: [vendedorID], references: [vendedorID])
+  cliente    Cliente    @relation(fields: [clienteID], references: [clienteID])
+  metodoPago MetodoPago @relation(fields: [metodoPagoID], references: [metodoPagoID])
+  tiempo     Tiempo     @relation(fields: [tiempoID], references: [tiempoID])
+
+  detalles DetalleVenta[]
+}
+
+model DetalleVenta {
+  detalleID Int @id @default(autoincrement())
+
+  ventaID    Int
+  varianteID Int
+  cantidad   Int
+  precioUnitario Float
+
+  venta    Venta            @relation(fields: [ventaID], references: [ventaID])
+  variante VarianteProducto @relation(fields: [varianteID], references: [varianteID])
+}
+
+model Proveedor {
+  proveedorID Int    @id @default(autoincrement())
+  nombre      String
+  razonSocial String
+  cuit        String
+  telefono    String
+  email       String
+  ciudad      String
+
+  compras Compra[]
+}
+
+model Compra {
+  compraID Int @id @default(autoincrement())
+
+  proveedorID  Int
+  sucursalID   Int
+  tiempoID     Int
+  metodoPagoID Int
+  totalCompra  Float
+
+  proveedor  Proveedor  @relation(fields: [proveedorID], references: [proveedorID])
+  sucursal   Sucursal   @relation(fields: [sucursalID], references: [sucursalID])
+  tiempo     Tiempo     @relation(fields: [tiempoID], references: [tiempoID])
+  metodoPago MetodoPago @relation(fields: [metodoPagoID], references: [metodoPagoID])
+
+  detalles DetalleCompra[]
+}
+
+model DetalleCompra {
+  detalleCompraID Int @id @default(autoincrement())
+
+  compraID   Int
+  varianteID Int
+  cantidad   Int
+  precioUnitario Float
+
+  compra   Compra           @relation(fields: [compraID], references: [compraID])
+  variante VarianteProducto @relation(fields: [varianteID], references: [varianteID])
+}
