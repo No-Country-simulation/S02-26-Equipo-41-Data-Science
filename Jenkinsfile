@@ -53,46 +53,54 @@ pipeline {
                     sh 'docker rm -f frontend-container backend-container nocountry-postgres || true'
                     sh 'docker compose down --remove-orphans || true'
                     
+                    echo "📝 Creando archivo de entorno persistente..."
+                    // Esto asegura que Docker Compose inyecte la variable correctamente al contenedor
+                    sh 'echo "DATABASE_URL=postgresql://user:password@nocountry-postgres:5432/db" > .env'
+                    
                     echo "🛠️ Construyendo imagen de Backend..."
                     sh 'docker compose build --no-cache backend'
                     
-                    echo "🚀 Levantando servicios con inyección de variables..."
-                    // Forzamos la variable DATABASE_URL para que el contenedor la tenga al iniciar
-                    sh 'DATABASE_URL="postgresql://user:password@nocountry-postgres:5432/db" docker compose up -d --force-recreate'
+                    echo "🚀 Levantando servicios..."
+                    sh 'docker compose up -d --force-recreate'
                     
                     echo "🔍 Iniciando validación de salud (Health Check)..."
                     def healthCheck = sh(script: '''
                         count=0
                         while [ $count -lt 15 ]; do
                             echo "Esperando que el backend arranque... Intento $((count+1))/15"
-                            # Verificamos si el contenedor está corriendo o reiniciando
-                            STATUS=$(docker inspect -f '{{.State.Status}}' backend-container)
-                            if [ "$STATUS" = "restarting" ]; then
-                                echo "⚠️ El contenedor se está reiniciando, esperando..."
-                            fi
                             
-                            if docker exec backend-container wget -qO- http://localhost:3000/health > /dev/null; then
+                            # 1. Intentar conectar al endpoint de salud
+                            if docker exec backend-container wget -qO- http://localhost:3000/health > /dev/null 2>&1; then
                                 echo "✅ EL BACKEND RESPONDE CORRECTAMENTE"
                                 exit 0
                             fi
+
+                            # 2. Verificar si el contenedor colapsó
+                            STATUS=$(docker inspect -f '{{.State.Status}}' backend-container)
+                            if [ "$STATUS" != "running" ]; then
+                                echo "⚠️ Alerta: El contenedor está en estado [$STATUS]"
+                                echo "--- Últimos 10 logs del Backend ---"
+                                docker logs --tail 10 backend-container
+                                echo "-----------------------------------"
+                            fi
+
                             sleep 10
                             count=$((count+1))
                         done
-                        echo "❌ EL BACKEND NO RESPONDIÓ A TIEMPO"
+                        echo "❌ ERROR: El backend no respondió después de 150 segundos."
                         exit 1
                     ''', returnStatus: true)
 
                     if (healthCheck != 0) {
-                        echo "⚠️ Logs finales del backend:"
-                        sh 'docker logs backend-container'
-                        error("Falló el Health Check.")
+                        error("Falló el Health Check: El sistema no es estable.")
                     }
                 }
             }
             post {
                 always {
-                    echo "🧹 Limpiando entorno..."
+                    echo "🧹 Limpiando entorno de integración..."
                     sh 'docker compose down'
+                    sh 'rm -f .env'
                 }
             }
         }
