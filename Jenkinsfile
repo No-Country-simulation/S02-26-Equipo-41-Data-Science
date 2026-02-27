@@ -27,8 +27,13 @@ pipeline {
                     }
                     steps { 
                         dir('backend') { 
-                            // CORRECCIÓN: Se agrega npx prisma generate antes de los tests
-                            sh 'npm install && npx prisma generate && npm run test -- --passWithNoTests' 
+                            // MODIFICACIÓN: Agregamos una DATABASE_URL ficticia para que Prisma genere el cliente sin protestar
+                            sh '''
+                                npm install
+                                export DATABASE_URL="postgresql://fake:fake@localhost:5432/fake"
+                                npx prisma generate
+                                npm run test -- --passWithNoTests
+                            '''
                         } 
                     }
                 }
