@@ -30,7 +30,7 @@ const router = createRouter({
         {
           path: 'crear',
           name: 'inventory-create',
-          component: () => import('@/views/inventory/InventoryCreate.vue'),
+          component: () => import('@/views/inventory/InventoryView.vue'), // Mismo componente
           meta: { title: 'Crear Producto' }
         },
         {
@@ -43,9 +43,9 @@ const router = createRouter({
         {
           path: ':id/editar',
           name: 'inventory-edit',
-          component: () => import('@/views/inventory/InventoryEdit.vue'),
+          component: () => import('@/views/inventory/InventoryView.vue'), // Mismo componente
           meta: { title: 'Editar Producto' },
-          props: true
+          props: true // Esto pasa el :id como prop automáticamente
         },
         {
           path: ':id/ajustar-stock',
