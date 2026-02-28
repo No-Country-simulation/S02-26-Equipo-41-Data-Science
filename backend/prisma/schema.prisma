@@ -12,55 +12,109 @@ datasource db {
   provider = "postgresql"
 }
 
+//////////////////////////////
+// ROLES
+//////////////////////////////
+
+model Rol {
+  rolID  Int    @id @default(autoincrement())
+  nombre String
+
+  usuarios Usuario[]
+}
+
+//////////////////////////////
+// USUARIOS
+//////////////////////////////
+
+model Usuario {
+  usuarioID    Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  email        String?  @unique
+  activo       Boolean  @default(true)
+  ultimoLogin  DateTime?
+
+  rolID      Int?
+  vendedorID Int?   @unique
+
+  rol      Rol?      @relation(fields: [rolID], references: [rolID])
+  vendedor Vendedor? @relation(fields: [vendedorID], references: [vendedorID])
+}
+
+//////////////////////////////
+// TIEMPO
+//////////////////////////////
+
 model Tiempo {
   tiempoID      Int      @id @default(autoincrement())
   fecha         DateTime
-  dia           Int
-  mes           Int
-  anio          Int
-  diaSemana     String
-  esFinDeSemana Boolean
+  dia           Int?
+  mes           Int?
+  anio          Int?
+  diaSemana     String?
+  esFinDeSemana Boolean?
 
-  ventas  Venta[]
-  compras Compra[]
+  ventas Venta[]
+
+  @@index([fecha])
 }
+
+//////////////////////////////
+// SUCURSAL
+//////////////////////////////
 
 model Sucursal {
   sucursalID Int    @id @default(autoincrement())
   nombre     String
-  ciudad     String
+  ciudad     String?
 
   vendedores Vendedor[]
   ventas     Venta[]
-  compras    Compra[]
 }
+
+//////////////////////////////
+// VENDEDOR
+//////////////////////////////
 
 model Vendedor {
   vendedorID Int    @id @default(autoincrement())
   nombre     String
 
-  sucursalID Int
-  sucursal   Sucursal @relation(fields: [sucursalID], references: [sucursalID])
+  sucursalID Int?
+  sucursal   Sucursal? @relation(fields: [sucursalID], references: [sucursalID])
 
-  ventas Venta[]
+  ventas  Venta[]
+  usuario Usuario?
 }
+
+//////////////////////////////
+// CLIENTE
+//////////////////////////////
 
 model Cliente {
   clienteID Int    @id @default(autoincrement())
   nombre    String
-  dni       String
-  telefono  String
+  dni       String? @unique
+  telefono  String?
 
   ventas Venta[]
 }
+
+//////////////////////////////
+// METODO PAGO
+//////////////////////////////
 
 model MetodoPago {
   metodoPagoID Int    @id @default(autoincrement())
   nombre       String
 
-  ventas  Venta[]
-  compras Compra[]
+  ventas Venta[]
 }
+
+//////////////////////////////
+// CATEGORIA
+//////////////////////////////
 
 model Categoria {
   categoriaID Int    @id @default(autoincrement())
@@ -69,100 +123,101 @@ model Categoria {
   productos Producto[]
 }
 
+//////////////////////////////
+// MARCA
+//////////////////////////////
+
+model Marca {
+  marcaID Int    @id @default(autoincrement())
+  nombre  String
+
+  productos Producto[]
+}
+
+//////////////////////////////
+// PRODUCTO
+//////////////////////////////
+
 model Producto {
   productoID Int    @id @default(autoincrement())
   nombre     String
 
-  categoriaID Int
-  categoria   Categoria @relation(fields: [categoriaID], references: [categoriaID])
+  categoriaID Int?
+  marcaID     Int?
+
+  categoria Categoria? @relation(fields: [categoriaID], references: [categoriaID])
+  marca     Marca?     @relation(fields: [marcaID], references: [marcaID])
 
   variantes VarianteProducto[]
+
+  @@index([categoriaID])
+  @@index([marcaID])
 }
+
+//////////////////////////////
+// VARIANTE PRODUCTO
+//////////////////////////////
 
 model VarianteProducto {
-  varianteID Int     @id @default(autoincrement())
-  talla      String?
-  color      String?
-  sku        String
-  precioVenta Float
+  varianteID  Int     @id @default(autoincrement())
+  talla       String?
+  color       String?
+  sku         String  @unique
+  precioVenta Decimal
 
-  productoID Int
-  producto   Producto @relation(fields: [productoID], references: [productoID])
+  productoID Int?
+  producto   Producto? @relation(fields: [productoID], references: [productoID])
 
-  detalleVentas  DetalleVenta[]
-  detalleCompras DetalleCompra[]
+  detalleVentas DetalleVenta[]
+
+  @@index([productoID])
 }
+
+//////////////////////////////
+// VENTA
+//////////////////////////////
 
 model Venta {
   ventaID Int @id @default(autoincrement())
 
-  sucursalID   Int
-  vendedorID   Int
-  clienteID    Int
-  metodoPagoID Int
-  tiempoID     Int
+  sucursalID   Int?
+  vendedorID   Int?
+  clienteID    Int?
+  metodoPagoID Int?
+  tiempoID     Int?
 
-  hora       DateTime
-  totalVenta Float
+  hora       DateTime?
+  totalVenta Decimal?
 
-  sucursal   Sucursal   @relation(fields: [sucursalID], references: [sucursalID])
-  vendedor   Vendedor   @relation(fields: [vendedorID], references: [vendedorID])
-  cliente    Cliente    @relation(fields: [clienteID], references: [clienteID])
-  metodoPago MetodoPago @relation(fields: [metodoPagoID], references: [metodoPagoID])
-  tiempo     Tiempo     @relation(fields: [tiempoID], references: [tiempoID])
+  sucursal   Sucursal?   @relation(fields: [sucursalID], references: [sucursalID])
+  vendedor   Vendedor?   @relation(fields: [vendedorID], references: [vendedorID])
+  cliente    Cliente?    @relation(fields: [clienteID], references: [clienteID])
+  metodoPago MetodoPago? @relation(fields: [metodoPagoID], references: [metodoPagoID])
+  tiempo     Tiempo?     @relation(fields: [tiempoID], references: [tiempoID])
 
   detalles DetalleVenta[]
+
+  @@index([clienteID])
+  @@index([vendedorID])
+  @@index([sucursalID])
+  @@index([tiempoID])
 }
+
+//////////////////////////////
+// DETALLE VENTA
+//////////////////////////////
 
 model DetalleVenta {
   detalleID Int @id @default(autoincrement())
 
-  ventaID    Int
-  varianteID Int
+  ventaID    Int?
+  varianteID Int?
   cantidad   Int
-  precioUnitario Float
+  precioUnitario Decimal
 
-  venta    Venta            @relation(fields: [ventaID], references: [ventaID])
-  variante VarianteProducto @relation(fields: [varianteID], references: [varianteID])
-}
+  venta    Venta?            @relation(fields: [ventaID], references: [ventaID])
+  variante VarianteProducto? @relation(fields: [varianteID], references: [varianteID])
 
-model Proveedor {
-  proveedorID Int    @id @default(autoincrement())
-  nombre      String
-  razonSocial String
-  cuit        String
-  telefono    String
-  email       String
-  ciudad      String
-
-  compras Compra[]
-}
-
-model Compra {
-  compraID Int @id @default(autoincrement())
-
-  proveedorID  Int
-  sucursalID   Int
-  tiempoID     Int
-  metodoPagoID Int
-  totalCompra  Float
-
-  proveedor  Proveedor  @relation(fields: [proveedorID], references: [proveedorID])
-  sucursal   Sucursal   @relation(fields: [sucursalID], references: [sucursalID])
-  tiempo     Tiempo     @relation(fields: [tiempoID], references: [tiempoID])
-  metodoPago MetodoPago @relation(fields: [metodoPagoID], references: [metodoPagoID])
-
-  detalles DetalleCompra[]
-}
-
-model DetalleCompra {
-  detalleCompraID Int @id @default(autoincrement())
-
-  compraID   Int
-  varianteID Int
-  cantidad   Int
-  precioUnitario Float
-
-  compra   Compra           @relation(fields: [compraID], references: [compraID])
-  variante VarianteProducto @relation(fields: [varianteID], references: [varianteID])
+  @@index([ventaID])
+  @@index([varianteID])
 }
