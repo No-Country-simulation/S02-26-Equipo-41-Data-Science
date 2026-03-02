@@ -78,8 +78,23 @@ const router = createRouter({
     {
       path: '/clientes',
       name: 'customers',
-      component: () => import('@/views/CustomersView.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('@/views/customer/CustomerLayout.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path:'',
+          name: 'customer-list',
+          component: () => import('@/views/customer/CustomerList.vue'),
+          meta: { title: 'Listado de Clientes' }
+        },
+        {
+          path: ':id',
+          name: 'customer-detail',
+          component: () => import('@/views/customer/CustomerDetail.vue'),
+          meta: { title: 'Detalle de Cliente' },
+          props: true
+        }
+      ]  
     },
     {
       path: '/:pathMatch(.*)*',
