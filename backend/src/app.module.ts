@@ -8,6 +8,9 @@ import { HealthModule } from './health/health.module';
 import { SucursalesModule } from './sucursales/sucursales.module';
 import { VendedoresModule } from './vendedores/vendedores.module';
 import { VentasModule } from './ventas/ventas.module';
+import { UsuariosModule } from './usuarios/usuarios.module';
+import { RolModule } from './rol/rol.module';
+import { MarcaModule } from './marca/marca.module';
 
 @Module({
   imports: [
@@ -20,6 +23,9 @@ import { VentasModule } from './ventas/ventas.module';
     SucursalesModule,
     VendedoresModule,
     VentasModule,
+    UsuariosModule,
+    RolModule,
+    MarcaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
