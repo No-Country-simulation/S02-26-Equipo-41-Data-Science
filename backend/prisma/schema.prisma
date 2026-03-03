@@ -95,8 +95,8 @@ model Vendedor {
 model Cliente {
   clienteID Int    @id @default(autoincrement())
   nombre    String
-  dni       String? @unique
-  telefono  String?
+  genero    String 
+  edad      Int
 
   ventas Venta[]
 }
