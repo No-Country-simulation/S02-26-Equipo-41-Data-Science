@@ -11,9 +11,35 @@ const router = createRouter({
     },
     {
       path: '/',
-      name: 'home',
-      component: () => import('@/views/HomeView.vue'),
-      meta: { requiresAuth: true }
+      name: 'dashboard',
+      component: () => import('@/views/dashboard/DashboardLayout.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        { 
+          path: '',
+          name: 'dashboard-home',
+          component: () => import('@/views/dashboard/DashboardHome.vue'),
+          meta: { title: 'Panel de Control' }
+        },
+        {
+          path: 'ventas',
+          name: 'dashboard-sales',
+          component: () => import('@/views/dashboard/DashboardSales.vue'),
+          meta: { title: 'Ventas' }
+        },
+        {
+          path: 'inventario',
+          name: 'dashboard-inventory',
+          component: () => import('@/views/dashboard/DashboardInventory.vue'),
+          meta: { title: 'Inventario' }
+        },
+        { 
+          path: 'clientes', 
+          name: 'dashboard-customers',
+          component: () => import('@/views/dashboard/DashboardCustomers.vue'), 
+          meta: { title: 'Clientes' } 
+        },
+      ]
     },
     // Rutas de Inventario con subrutas
     {
