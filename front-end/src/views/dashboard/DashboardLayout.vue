@@ -54,26 +54,12 @@
           </router-link>
         </nav>
       </div>
-
-      <!-- Footer plan -->
-      <div class="mt-auto p-5">
-        <Transition name="fade">
-          <div v-if="!collapsed" class="p-4 bg-white/5 rounded-xl border border-white/10">
-            <p class="text-xs font-bold text-slate-400 uppercase mb-2">Plan Actual</p>
-            <p class="text-sm font-bold text-white mb-1">Premium Pro</p>
-            <div class="w-full bg-white/10 rounded-full h-1.5 mb-2">
-              <div class="bg-primary h-1.5 rounded-full w-3/4"></div>
-            </div>
-            <p class="text-[10px] text-slate-500">75% del límite de uso mensual</p>
-          </div>
-        </Transition>
-      </div>
     </aside>
 
     <!-- Main content -->
     <div class="flex-1 flex flex-col min-w-0">
-
-      <!-- Top Header -->
+      <AppNavbar/>
+      <!--
       <header class="sticky top-0 z-40 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm">
         <div class="px-6">
           <div class="flex justify-between items-center h-16">
@@ -81,10 +67,6 @@
               {{ currentPageTitle }}
             </span>
             <div class="flex items-center gap-4">
-              <button class="p-2 text-slate-400 hover:text-primary transition-colors relative">
-                <span class="material-symbols-outlined">notifications</span>
-                <span class="absolute top-2 right-2 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
-              </button>
               <div class="h-8 w-[1px] bg-slate-200 mx-1"></div>
               <div class="flex items-center gap-3 cursor-pointer group">
                 <div class="text-right hidden sm:block">
@@ -99,24 +81,11 @@
           </div>
         </div>
       </header>
-
+      -->
       <!-- Routed page content -->
       <main class="flex-1 overflow-auto">
-        <slot />
+        <router-view />
       </main>
-
-      <!-- Footer -->
-      <footer class="px-6 py-6 border-t border-slate-200 bg-white">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p class="text-xs text-slate-400 font-medium">© 2024 DATAMARK Perú. Todos los derechos reservados.</p>
-          <div class="flex gap-6">
-            <a class="text-xs text-slate-500 hover:text-primary transition-colors" href="#">Soporte Técnico</a>
-            <a class="text-xs text-slate-500 hover:text-primary transition-colors" href="#">Configuración</a>
-            <a class="text-xs text-slate-500 hover:text-primary transition-colors" href="#">Cerrar Sesión</a>
-          </div>
-        </div>
-      </footer>
-
     </div>
   </div>
 </template>
@@ -124,6 +93,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import AppNavbar from '@/components/common/AppNavbar.vue'
 
 const route = useRoute()
 const collapsed = ref(false)
