@@ -3,12 +3,10 @@
     <!-- Logo y navegación principal -->
     <div class="flex items-center gap-8">
       <!-- Logo usando el componente AppLogo (igual que en login) -->
-      <router-link to="/" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
+      <router-link to="/dashboard" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
         <div class="flex flex-col gap-0.5">
           <!-- Componente AppLogo reutilizable -->
-          <AppLogo size="sm" :icon="logoIcon" />
-          <!-- Subtítulo -->
-          <p class="navbar-subtitle">{{ subtitle }}</p>
+          <AppLogo size="md" :icon="logoIcon" />
         </div>
       </router-link>
 
@@ -64,10 +62,6 @@ import { useAuthStore } from '@/stores/auth'
 import AppLogo from '@/components/common/AppLogo.vue'
 
 const props = defineProps({
-  subtitle: {
-    type: String,
-    default: 'Gestión de Inventario'
-  },
   logoIcon: {
     type: String,
     default: 'analytics'
