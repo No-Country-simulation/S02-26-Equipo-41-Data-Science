@@ -64,7 +64,7 @@
 
     <!-- Paginación -->
     <div
-      v-if="showPagination && data && data.length > 0"
+      v-if="showPagination && totalItems > 0"
       class="px-6 py-5 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between border-t border-gray-200 dark:border-gray-800"
     >
       <!-- Info de paginación -->
@@ -77,7 +77,7 @@
         <button
           @click="goToPage(currentPage - 1)"
           :disabled="currentPage === 1"
-          class="size-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-all shadow-sm"
+          class="size-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
         >
           <span class="material-symbols-outlined">chevron_left</span>
         </button>
@@ -100,7 +100,7 @@
         <button
           @click="goToPage(currentPage + 1)"
           :disabled="currentPage === totalPages"
-          class="size-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-all shadow-sm"
+          class="size-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
         >
           <span class="material-symbols-outlined">chevron_right</span>
         </button>
@@ -119,7 +119,7 @@ const props = defineProps({
     required: true
     // Formato: [{ key: 'name', label: 'Nombre', align: 'left' }]
   },
-  // Datos a mostrar
+  // Datos a mostrar (ya paginados desde el servidor)
   data: {
     type: Array,
     required: true
@@ -129,26 +129,26 @@ const props = defineProps({
     type: String,
     default: 'id'
   },
-  // Paginación
+  // Paginación (valores del composable usePagination)
   showPagination: {
     type: Boolean,
     default: true
   },
   currentPage: {
     type: Number,
-    default: 1
+    required: true
   },
   totalPages: {
     type: Number,
-    default: 1
+    required: true
   },
   totalItems: {
     type: Number,
-    default: 0
+    required: true
   },
-  itemsPerPage: {
+  pageSize: {
     type: Number,
-    default: 10
+    required: true
   },
   // Empty state
   emptyMessage: {
@@ -175,8 +175,8 @@ const getRowKey = (row, index) => {
 
 // Texto de paginación
 const paginationText = computed(() => {
-  const start = (props.currentPage - 1) * props.itemsPerPage + 1
-  const end = Math.min(props.currentPage * props.itemsPerPage, props.totalItems)
+  const start = (props.currentPage - 1) * props.pageSize + 1
+  const end = Math.min(props.currentPage * props.pageSize, props.totalItems)
   return `Mostrando ${start}-${end} de ${props.totalItems} ${props.totalItems === 1 ? 'item' : 'items'}`
 })
 
@@ -190,7 +190,6 @@ const visiblePages = computed(() => {
       pages.push(i)
     }
   } else {
-    // Lógica para mostrar páginas cercanas a la actual
     let start = Math.max(1, props.currentPage - 2)
     let end = Math.min(props.totalPages, props.currentPage + 2)
     

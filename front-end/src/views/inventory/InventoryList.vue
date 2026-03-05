@@ -1,13 +1,12 @@
 <template>
   <div class="max-w-[1400px] mx-auto p-4">
-    <!-- Header con Breadcrumbs -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
       <div>
         <h2 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight mt-2">
           Inventario de Productos
         </h2>
         <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">
-          Panel de control de existencias agrupado por modelo base.
+          Listado de productos disponibles en el inventario
         </p>
       </div>
       <BaseButton
@@ -19,14 +18,14 @@
       </BaseButton>
     </div>
 
-    <!-- ✅ TableFilters Component -->
+    <!-- Filtros -->
     <TableFilters
-      v-model:search-query="searchQuery"
+      v-model:search-query="filters.search"
       :quick-filters="quickFilters"
-      :active-quick-filter="activeQuickFilter"
+      :active-quick-filter="filters.quickFilter"
       :advanced-filters="advancedFilters"
-      :filter-values="advancedFilterValues"
-      search-placeholder="Buscar por SKU base, nombre de modelo..."
+      :filter-values="filters.advanced"
+      search-placeholder="Buscar por nombre de producto..."
       @quick-filter="handleQuickFilter"
       @filter-change="handleAdvancedFilterChange"
       @clear-filters="handleClearFilters"
@@ -37,30 +36,30 @@
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
     </div>
 
-    <!-- DataTable Component -->
+    <!-- DataTable -->
     <DataTable
       v-else
       :columns="tableColumns"
-      :data="paginatedProducts"
+      :data="products"
       :show-pagination="true"
-      :current-page="currentPage"
-      :total-pages="totalPages"
-      :total-items="filteredProducts.length"
-      :items-per-page="itemsPerPage"
+      :current-page="pagination.page.value"
+      :total-pages="pagination.totalPages.value"
+      :total-items="pagination.total.value"
+      :page-size="pagination.pageSize.value"
       empty-message="No se encontraron productos"
       @page-change="handlePageChange"
     >
-      
-      <!-- ✅ Slot: Image -->
-      <template #cell-image="{ row }">
+      <!-- Imagen -->
+      <template #cell-imagen_url="{ row }">
         <div
-          v-if="row.image"
+          v-if="row.imagen_url"
           class="size-12 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden border border-gray-200 dark:border-gray-700"
         >
-          <div
-            class="w-full h-full bg-center bg-cover"
-            :style="`background-image: url('${row.image}')`"
-          ></div>
+          <img
+            :src="row.imagen_url"
+            :alt="row.nombreproducto"
+            class="w-full h-full object-cover"
+          />
         </div>
         <div
           v-else
@@ -70,93 +69,83 @@
         </div>
       </template>
 
-      <!-- ✅ Slot: SKU -->
-      <template #cell-sku="{ row }">
-        <span class="text-sm font-medium text-gray-500 dark:text-gray-400 tracking-tight">
-          {{ row.sku }}
-        </span>
-      </template>
-
-      <!-- ✅ Slot: Name -->
-      <template #cell-name="{ row }">
+      <!-- Nombre -->
+      <template #cell-nombreproducto="{ row }">
         <div class="flex flex-col">
-          <span class="text-sm font-bold text-gray-900 dark:text-white">{{ row.name }}</span>
+          <span class="text-sm font-bold text-gray-900 dark:text-white">
+            {{ row.nombreproducto }}
+          </span>
           <span class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-            {{ row.colorsCount }} {{ row.colorsCount === 1 ? 'color' : 'colores' }} · 
-            {{ row.variantsCount }} {{ row.variantsCount === 1 ? 'variante' : 'variantes' }}
+            {{ row.total_variantes }} {{ row.total_variantes === 1 ? 'variante' : 'variantes' }}
           </span>
         </div>
       </template>
 
-      <!-- ✅ Slot: Category -->
-      <template #cell-category="{ row }">
+      <!-- Categoría -->
+      <template #cell-categoria="{ row }">
         <span
           :class="[
             'inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black uppercase',
-            row.category === 'Calzado'
+            row.categoria === 'Calzado'
               ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
               : 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
           ]"
         >
-          {{ row.category }}
+          {{ row.categoria }}
         </span>
       </template>
 
-      <!-- ✅ Slot: Price Range -->
-      <template #cell-priceRange="{ row }">
+      <!-- Precio -->
+      <template #cell-price_range="{ row }">
         <span class="text-sm font-bold text-gray-900 dark:text-white">
-          {{ row.priceRange }}
+          {{ formatPriceRange(row.min_price, row.max_price) }}
         </span>
       </template>
 
-      <!-- ✅ Slot: Stock Status -->
-      <template #cell-stockStatus="{ row }">
+      <!-- Stock Status -->
+      <template #cell-stock="{ row }">
         <div class="flex flex-col gap-1">
           <!-- Badge principal -->
           <span
             :class="[
               'inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-bold border w-fit',
-              row.stockColor === 'emerald'
-                ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/50'
-                : row.stockColor === 'orange'
-                  ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200/50'
-                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200/50'
+              getStockColorClasses(row.stock_status)
             ]"
           >
             <span
               :class="[
                 'size-2 rounded-full mr-2',
-                row.stockColor === 'emerald' ? 'bg-emerald-500' : row.stockColor === 'orange' ? 'bg-orange-500' : 'bg-red-500'
+                getStockDotColor(row.stock_status)
               ]"
             ></span>
-            {{ row.totalStock }} Unidades ({{ row.stockBadge }})
+            {{ row.total_stock }} Unidades ({{ getStockLabel(row.stock_status) }})
           </span>
 
           <!-- Alertas -->
           <span
-            v-if="row.lowStockCount > 0 && row.outOfStockCount > 0"
+            v-if="row.low_stock_count > 0 && row.out_stock_count > 0"
             class="text-[10px] text-red-600 dark:text-red-400 font-semibold px-1"
           >
-            {{ row.outOfStockCount }} sin stock, {{ row.lowStockCount }} stock bajo
+            {{ row.out_stock_count }} sin stock, {{ row.low_stock_count }} stock bajo
           </span>
           <span
-            v-else-if="row.outOfStockCount > 0"
+            v-else-if="row.out_stock_count > 0"
             class="text-[10px] text-red-600 dark:text-red-400 font-semibold px-1"
           >
-            {{ row.outOfStockCount }} {{ row.outOfStockCount === 1 ? 'variante sin stock' : 'variantes sin stock' }}
+            {{ row.out_stock_count }} {{ row.out_stock_count === 1 ? 'variante sin stock' : 'variantes sin stock' }}
           </span>
           <span
-            v-else-if="row.lowStockCount > 0"
+            v-else-if="row.low_stock_count > 0"
             class="text-[10px] text-orange-600 dark:text-orange-400 font-semibold px-1"
           >
-            {{ row.lowStockCount }} {{ row.lowStockCount === 1 ? 'variante con stock bajo' : 'variantes con stock bajo' }}
+            {{ row.low_stock_count }} {{ row.low_stock_count === 1 ? 'variante con stock bajo' : 'variantes con stock bajo' }}
           </span>
         </div>
       </template>
 
-      <!-- ✅ Slot: Actions -->
+      <!-- Acciones -->
       <template #cell-actions="{ row }">
-        <div class="flex items-center justify-center gap-1" @click.stop>
+        <div class="flex items-center justify-center gap-1">
           <button
             @click="handleView(row)"
             class="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
@@ -167,14 +156,14 @@
           <button
             @click="handleEdit(row)"
             class="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-all"
-            title="Editar Producto"
+            title="Editar"
           >
             <span class="material-symbols-outlined text-xl">edit</span>
           </button>
           <button
             @click="handleDelete(row)"
             class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
-            title="Eliminar Producto"
+            title="Eliminar"
           >
             <span class="material-symbols-outlined text-xl">delete</span>
           </button>
@@ -185,38 +174,42 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import BaseButton from '@/components/common/BaseButton.vue'
-import BaseBreadcrumb from '@/components/common/BaseBreadcrumb.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import TableFilters from '@/components/common/TableFilters.vue'
 import { useInventoryStore } from '@/stores/inventory'
+import { usePagination } from '@/composables/usePagination'
+import { useFilters } from '@/composables/useFilters'
+import { toast } from '@/utils/toast'
 
 const router = useRouter()
 const inventoryStore = useInventoryStore()
-
 const { loading } = storeToRefs(inventoryStore)
+
+const pagination = usePagination(10) // 10 items por página
+const products = ref([])
 
 // ==========================================
 // FILTROS
 // ==========================================
-const searchQuery = ref('')
-const activeQuickFilter = ref('all')
-const advancedFilterValues = ref({
-  stock: '',
-  priceRange: ''
+const { filters, setFilter, clear } = useFilters({
+  search: '',
+  quickFilter: 'all',
+  advanced: {
+    stock: '',
+    priceRange: ''
+  }
 })
 
-// Filtros rápidos
 const quickFilters = [
   { label: 'Todos', value: 'all' },
   { label: 'Ropa', value: 'Ropa' },
   { label: 'Calzado', value: 'Calzado' }
 ]
 
-// Filtros avanzados
 const advancedFilters = [
   {
     key: 'stock',
@@ -224,9 +217,9 @@ const advancedFilters = [
     type: 'select',
     placeholder: 'Todos los niveles',
     options: [
-      { label: 'Sin Stock (Variantes con 0)', value: 'out' },
-      { label: 'Stock Bajo (< umbral)', value: 'low' },
-      { label: 'Stock OK (> umbral)', value: 'ok' }
+      { label: 'Sin Stock', value: 'out' },
+      { label: 'Stock Bajo', value: 'low' },
+      { label: 'Stock OK', value: 'ok' }
     ]
   },
   {
@@ -243,94 +236,142 @@ const advancedFilters = [
   }
 ]
 
-// ==========================================
-// TABLA
-// ==========================================
 const tableColumns = [
-  { key: 'image', label: 'Miniatura' },
-  { key: 'sku', label: 'SKU Base' },
-  { key: 'name', label: 'Nombre del Producto' },
-  { key: 'category', label: 'Categoría' },
-  { key: 'priceRange', label: 'Precio Venta' },
-  { key: 'stockStatus', label: 'Estado Stock' },
+  { key: 'imagen_url', label: 'Miniatura' },
+  { key: 'nombreproducto', label: 'Nombre del Producto' },
+  { key: 'categoria', label: 'Categoría' },
+  { key: 'price_range', label: 'Precio' },
+  { key: 'stock', label: 'Stock' },
   { key: 'actions', label: 'Acciones', align: 'center' }
 ]
 
 // ==========================================
-// PAGINACIÓN
+// FETCH DATA (SERVER-SIDE)
 // ==========================================
-const currentPage = ref(1)
-const itemsPerPage = 10
+async function fetchData() {
+  try {
+    const { data, count, error } = await inventoryStore.fetchProducts({
+      sucursalId: 1,
+      from: pagination.from.value,
+      to: pagination.to.value,
+      filters: filters.value
+    })
 
-// Productos filtrados
-const filteredProducts = computed(() => {
-  return inventoryStore.getFilteredProducts({
-    search: searchQuery.value,
-    quickFilter: activeQuickFilter.value,
-    advanced: advancedFilterValues.value
-  })
-})
+    if (error) throw error
 
-// Total de páginas
-const totalPages = computed(() => {
-  return Math.ceil(filteredProducts.value.length / itemsPerPage)
-})
-
-// Productos paginados
-const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return filteredProducts.value.slice(start, end)
-})
+    products.value = data || []
+    pagination.setTotal(count || 0)
+  } catch (err) {
+    console.error('Error fetching products:', err)
+  }
+}
 
 // ==========================================
 // HANDLERS
 // ==========================================
+const handlePageChange = (page) => {
+  pagination.page = page
+  fetchData()
+}
+
+const handleQuickFilter = (value) => {
+  setFilter('quickFilter', value)
+  pagination.reset()
+  fetchData()
+}
+
+const handleAdvancedFilterChange = ({ key, value }) => {
+  // Actualizar filtro anidado en advanced
+  const currentAdvanced = { ...filters.value.advanced }
+  currentAdvanced[key] = value
+  setFilter('advanced', currentAdvanced)
+  
+  pagination.reset()
+  fetchData()
+}
+
+const handleClearFilters = () => {
+  clear()
+  pagination.reset()
+  fetchData()
+}
+
 const handleCreate = () => {
   router.push({ name: 'inventory-create' })
 }
 
 const handleView = (row) => {
-  router.push({ name: 'inventory-detail', params: { id: row.id } })
+  router.push({ name: 'inventory-detail', params: { id: row.productoid } })
 }
 
 const handleEdit = (row) => {
-  router.push({ name: 'inventory-edit', params: { id: row.id } })
+  router.push({ name: 'inventory-edit', params: { id: row.productoid } })
 }
 
-const handleDelete = (row) => {
-  // TODO: Implementar modal de confirmación
-  console.log('Delete product:', row.id)
-}
-
-const handleQuickFilter = (value) => {
-  activeQuickFilter.value = value
-  currentPage.value = 1 // Reset página al cambiar filtro
-}
-
-const handleAdvancedFilterChange = ({ key, value }) => {
-  advancedFilterValues.value[key] = value
-  currentPage.value = 1 // Reset página al cambiar filtro
-}
-
-const handleClearFilters = () => {
-  advancedFilterValues.value = {
-    stock: '',
-    priceRange: ''
+const handleDelete = async (row) => {
+  try {
+    await inventoryStore.deleteProduct(row.productoid)
+    fetchData()
+    toast.success('Producto eliminado exitosamente')
+  } catch (err) {
+    console.error('Error deleting product:', err)
+    toast.error('Error al eliminar el producto')
   }
-  currentPage.value = 1
 }
 
-const handlePageChange = (page) => {
-  currentPage.value = page
+// ==========================================
+// UTILITIES (Mantener estilos originales)
+// ==========================================
+const formatPriceRange = (min, max) => {
+  if (!min || !max) return 'N/A'
+  if (min === max) {
+    return `S/ ${min.toFixed(2)}`
+  }
+  return `S/ ${min.toFixed(2)} – S/ ${max.toFixed(2)}`
 }
+
+const getStockColorClasses = (status) => {
+  const classes = {
+    'ok': 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/50',
+    'low': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200/50',
+    'out': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200/50'
+  }
+  return classes[status] || classes['ok']
+}
+
+const getStockDotColor = (status) => {
+  const colors = {
+    'ok': 'bg-emerald-500',
+    'low': 'bg-orange-500',
+    'out': 'bg-red-500'
+  }
+  return colors[status] || colors['ok']
+}
+
+const getStockLabel = (status) => {
+  const labels = {
+    'ok': 'En Stock',
+    'low': 'Stock Bajo',
+    'out': 'Sin Stock'
+  }
+  return labels[status] || 'En Stock'
+}
+
+// ==========================================
+// WATCHERS
+// ==========================================
+// Debounce para búsqueda
+let searchTimeout
+watch(() => filters.value.search, () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    pagination.reset()
+    fetchData()
+  }, 300)
+})
 
 // ==========================================
 // LIFECYCLE
 // ==========================================
-onMounted(async () => {
-  if (inventoryStore.products.length === 0) {
-    await inventoryStore.fetchProducts()
-  }
-})
+fetchData()
 </script>
