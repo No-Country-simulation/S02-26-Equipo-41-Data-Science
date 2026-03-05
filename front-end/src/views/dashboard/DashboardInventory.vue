@@ -1,5 +1,5 @@
 <template>
-  <DashboardLayout>
+  <div>
     <div class="px-6 py-8 max-w-7xl mx-auto w-full">
 
       <!-- Header -->
@@ -149,12 +149,11 @@
       </div>
 
     </div>
-  </DashboardLayout>
+  </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
-import DashboardLayout from '@/views/dashboard/DashboardLayout.vue'
 import KpiCard      from '@/components/common/KpiCard.vue'
 import CategoryCard from '@/components/common/CategoryCard.vue'
 import DonutChart   from '@/components/common/DonutChart.vue'

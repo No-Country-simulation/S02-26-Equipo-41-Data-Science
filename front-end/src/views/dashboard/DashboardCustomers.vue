@@ -1,5 +1,5 @@
 <template>
-  <DashboardLayout>
+  <div>
     <div class="px-6 py-8 max-w-7xl mx-auto w-full">
 
       <!-- Header -->
@@ -149,13 +149,12 @@
       </div>
 
     </div>
-  </DashboardLayout>
+  </div>
 </template>
 
 <script setup>
-import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import KpiCard    from '@/components/common/KpiCard.vue'
-import DonutChart from '@/components/charts/DonutChart.vue'
+import DonutChart from '@/components/common/DonutChart.vue'
 
 const months = ['Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic','Ene','Feb','Mar']
 
