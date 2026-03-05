@@ -10,15 +10,41 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
     {
-      path: '/',
-      name: 'home',
-      component: () => import('@/views/HomeView.vue'),
-      meta: { requiresAuth: true }
+      path: '/dashboard',
+      name: 'dashboard',
+      component: () => import('@/views/dashboard/DashboardLayout.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        { 
+          path: '',
+          name: 'dashboard-home',
+          component: () => import('@/views/dashboard/DashboardHome.vue'),
+          meta: { title: 'Panel de Control' }
+        },
+        {
+          path: 'ventas',
+          name: 'dashboard-sales',
+          component: () => import('@/views/dashboard/DashboardSales.vue'),
+          meta: { title: 'Ventas' }
+        },
+        {
+          path: 'inventario',
+          name: 'dashboard-inventory',
+          component: () => import('@/views/dashboard/DashboardInventory.vue'),
+          meta: { title: 'Inventario' }
+        },
+        { 
+          path: 'clientes', 
+          name: 'dashboard-customers',
+          component: () => import('@/views/dashboard/DashboardCustomers.vue'), 
+          meta: { title: 'Clientes' } 
+        },
+      ]
     },
     // Rutas de Inventario con subrutas
     {
       path: '/inventario',
-      component: () => import('@/views/inventory/InventoryLayout.vue'),
+      component: () => import('@/views/AppLayout.vue'),
       meta: { requiresAuth: true },
       children: [
         {
@@ -58,7 +84,7 @@ const router = createRouter({
     },
     {
       path: '/ventas',
-      component: () => import('@/views/sales/SalesLayout.vue'),
+      component: () => import('@/views/AppLayout.vue'),
       meta: { requiresAuth: true },
       children: [
         {
@@ -78,7 +104,7 @@ const router = createRouter({
     {
       path: '/clientes',
       name: 'customers',
-      component: () => import('@/views/customer/CustomerLayout.vue'),
+      component: () => import('@/views/AppLayout.vue'),
       meta: { requiresAuth: true },
       children: [
         {
@@ -121,7 +147,7 @@ router.beforeEach(async (to, from, next) => {
     }
 
     if (to.name === 'login' && authStore.isAuthenticated) {
-      next({ name: 'home' })
+      next({ name: 'dashboard' })
       return
     }
   }

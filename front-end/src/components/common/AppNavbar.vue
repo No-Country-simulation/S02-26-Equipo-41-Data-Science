@@ -84,7 +84,7 @@ const authStore = useAuthStore()
 
 // Links de navegación
 const navLinks = [
-  { path: '/', label: 'Dashboard' },
+  { path: '/dashboard', label: 'Dashboard' },
   { path: '/inventario', label: 'Inventario' },
   { path: '/ventas', label: 'Ventas' },
   { path: '/clientes', label: 'Clientes' }
