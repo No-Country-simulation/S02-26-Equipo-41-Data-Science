@@ -10,7 +10,7 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
     {
-      path: '/',
+      path: '/dashboard',
       name: 'dashboard',
       component: () => import('@/views/dashboard/DashboardLayout.vue'),
       meta: { requiresAuth: true },
@@ -44,7 +44,7 @@ const router = createRouter({
     // Rutas de Inventario con subrutas
     {
       path: '/inventario',
-      component: () => import('@/views/inventory/InventoryLayout.vue'),
+      component: () => import('@/views/AppLayout.vue'),
       meta: { requiresAuth: true },
       children: [
         {
@@ -84,7 +84,7 @@ const router = createRouter({
     },
     {
       path: '/ventas',
-      component: () => import('@/views/sales/SalesLayout.vue'),
+      component: () => import('@/views/AppLayout.vue'),
       meta: { requiresAuth: true },
       children: [
         {
@@ -104,7 +104,7 @@ const router = createRouter({
     {
       path: '/clientes',
       name: 'customers',
-      component: () => import('@/views/customer/CustomerLayout.vue'),
+      component: () => import('@/views/AppLayout.vue'),
       meta: { requiresAuth: true },
       children: [
         {
@@ -147,7 +147,7 @@ router.beforeEach(async (to, from, next) => {
     }
 
     if (to.name === 'login' && authStore.isAuthenticated) {
-      next({ name: 'home' })
+      next({ name: 'dashboard' })
       return
     }
   }
