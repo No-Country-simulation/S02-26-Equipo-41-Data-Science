@@ -48,7 +48,7 @@ const router = createRouter({
           props: true // Esto pasa el :id como prop automáticamente
         },
         {
-          path: ':id/ajustar-stock',
+          path: '/inventario/:productId/variante/:variantId/ajustar',
           name: 'inventory-adjust-stock',
           component: () => import('@/views/inventory/InventoryStockAdjust.vue'),
           meta: { title: 'Ajustar Stock' },
