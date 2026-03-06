@@ -184,8 +184,10 @@ import { useInventoryStore } from '@/stores/inventory'
 import { usePagination } from '@/composables/usePagination'
 import { useFilters } from '@/composables/useFilters'
 import { toast } from '@/utils/toast'
+import { useSucursalStore } from "@/stores/sucursal"
 
 const router = useRouter()
+const sucursalStore = useSucursalStore()
 const inventoryStore = useInventoryStore()
 const { loading } = storeToRefs(inventoryStore)
 
@@ -250,8 +252,9 @@ const tableColumns = [
 // ==========================================
 async function fetchData() {
   try {
+    
     const { data, count, error } = await inventoryStore.fetchProducts({
-      sucursalId: 1,
+      sucursalId: sucursalStore.sucursalActual,
       from: pagination.from.value,
       to: pagination.to.value,
       filters: filters.value
@@ -262,7 +265,6 @@ async function fetchData() {
     products.value = data || []
     pagination.setTotal(count || 0)
 
-    console.log('Productos obtenidos:', products.value)
   } catch (err) {
     console.error('Error fetching products:', err)
   }
@@ -372,6 +374,16 @@ watch(() => filters.value.search, () => {
   }, 300)
 })
 
+watch(
+  () => sucursalStore.sucursalActual,
+  (newSucursal) => {
+    if (!newSucursal) return
+
+    pagination.reset()
+    fetchData()
+  },
+  { immediate: true }
+)
 // ==========================================
 // LIFECYCLE
 // ==========================================
