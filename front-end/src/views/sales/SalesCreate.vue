@@ -147,6 +147,79 @@
 
         <hr class="divider" />
 
+        <!-- Vendedor asociado -->
+        <div class="section-block">
+          <div class="section-header">
+            <h2 class="section-title">
+              <span class="material-symbols-outlined">person</span>
+              Vendedor Asociado
+            </h2>
+            <span class="section-subtitle">
+              Actual:
+              <span class="text-primary">{{ selectedSeller?.nombrevendedor || 'Vendedor Final' }}</span>
+            </span>
+          </div>
+
+          <div class="client-grid">
+            <!-- Búsqueda de vendedores -->
+            <div class="client-search-col">
+              <div class="client-search-row">
+                <div class="search-wrapper">
+                  <span class="material-symbols-outlined search-icon">person_search</span>
+                  <input
+                    v-model="sellerSearch"
+                    type="text"
+                    class="search-input search-input--sm"
+                    placeholder="Buscar vendedor por nombre..."
+                  />
+                </div>
+                <button class="btn-new-client" @click="showNewSellerModal = true">
+                  + Nuevo Vendedor
+                </button>
+              </div>
+
+              <!-- Dropdown resultados -->
+              <div v-if="filteredSellers.length > 0" class="client-dropdown custom-scrollbar">
+                <div
+                  v-for="seller in filteredSellers"
+                  :key="seller.id"
+                  class="client-option"
+                  @click="selectSeller(seller)"
+                >
+                  <div class="client-option__header">
+                    <span class="client-option__name">{{ seller.nombrevendedor }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tarjeta vendedor seleccionado -->
+            <div class="client-selected-card">
+              <template v-if="selectedSeller">
+                <div class="client-selected-card__header">
+                  <div>
+                    <span class="client-selected-card__label">Vendedor Seleccionado</span>
+                    <h4 class="client-selected-card__name">{{ selectedSeller.nombrevendedor }}</h4>
+                  </div>
+                </div>
+                <div class="client-selected-card__actions">
+                  <button class="btn-text btn-text--primary" @click="selectedSeller = null">Cambiar</button>
+                  <button class="btn-text btn-text--danger" @click="selectedSeller = null">Quitar</button>
+                </div>
+              </template>
+              <template v-else>
+                <div class="client-empty">
+                  <span class="material-symbols-outlined">person_off</span>
+                  <p>Sin vendedor asignado</p>
+                  <small>Busca o crea uno arriba</small>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <hr class="divider" />
+
         <!-- Notas internas -->
         <div class="section-block">
           <label class="field-label">Notas internas de la venta</label>
@@ -229,14 +302,6 @@
 
           <!-- Totales -->
           <div class="totals">
-            <div class="totals__row">
-              <span>Subtotal</span>
-              <span>{{ formatCurrency(subtotal) }}</span>
-            </div>
-            <div class="totals__row totals__row--divider">
-              <span>IGV (18%)</span>
-              <span>{{ formatCurrency(igv) }}</span>
-            </div>
             <div class="totals__final">
               <span>Total</span>
               <span class="totals__amount">{{ formatCurrency(total) }}</span>
@@ -256,32 +321,12 @@
         </div>
       </aside>
     </main>
-
-    <!-- ══════════ MODAL ÉXITO ══════════ -->
-    <Transition name="fade">
-      <div v-if="showSuccessModal" class="modal-overlay" @click.self="showSuccessModal = false">
-        <div class="modal-success">
-          <div class="modal-success__icon">
-            <span class="material-symbols-outlined">check_circle</span>
-          </div>
-          <h3>¡Venta registrada!</h3>
-          <p>La venta fue procesada correctamente por {{ formatCurrency(total) }}</p>
-          <div class="modal-success__actions">
-            <button class="btn-outline" @click="printReceipt">
-              <span class="material-symbols-outlined">print</span> Imprimir
-            </button>
-            <button class="btn-primary" @click="newSale">
-              Nueva Venta
-            </button>
-          </div>
-        </div>
-      </div>
-    </Transition>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { toast } from '@/utils/toast'
 
 // ── Props ──────────────────────────────────────────
 const sucursalActiva = ref('Lima Central')
@@ -332,6 +377,30 @@ const selectClient = (client) => {
   clientSearch.value = ''
 }
 
+// ── Vendedores ─────────────────────────────────────
+const sellerSearch = ref('')
+const selectedSeller = ref(null)
+
+const sellers = ref([
+  { id: 1, nombrevendedor: 'Luis Quispe'},
+  { id: 2, nombrevendedor: 'Rosa Flores'},
+  { id: 3, nombrevendedor: 'Pedro Huamán'}
+])
+
+const filteredSellers = computed(() => {
+  const q = sellerSearch.value.toLowerCase().trim()
+  if (!q) return sellers.value
+  return sellers.value.filter(s =>
+    s.nombrevendedor.toLowerCase().includes(q)
+  )
+})
+
+const selectSeller = (seller) => {
+  selectedSeller.value = seller
+  sellerSearch.value = ''
+}
+
+
 // ── Carrito ────────────────────────────────────────
 const cartItems = ref([])
 const saleNotes = ref('')
@@ -355,6 +424,7 @@ const decreaseQty = (item) => { if (item.qty > 1) item.qty-- }
 const clearCart = () => {
   cartItems.value = []
   selectedClient.value = null
+  selectedSeller.value = null
   saleNotes.value = ''
 }
 
@@ -378,16 +448,16 @@ const showSuccessModal = ref(false)
 
 const confirmSale = () => {
   if (cartItems.value.length === 0) return
-  showSuccessModal.value = true
-}
-
-const printReceipt = () => {
-  window.print()
-}
-
-const newSale = () => {
+  if (!selectedClient.value) {
+    toast.error('Asocia un cliente antes de confirmar la venta')
+    return
+  }
+  if (!selectedSeller.value) {
+    toast.error('Asocia un vendedor antes de confirmar la venta')
+    return
+  }
+  toast.success('Venta confirmada por ' + formatCurrency(total.value))
   clearCart()
-  showSuccessModal.value = false
 }
 
 // ── Atajo teclado ──────────────────────────────────

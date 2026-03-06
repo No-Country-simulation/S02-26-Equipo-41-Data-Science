@@ -59,29 +59,6 @@
     <!-- Main content -->
     <div class="flex-1 flex flex-col min-w-0">
       <AppNavbar/>
-      <!--
-      <header class="sticky top-0 z-40 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm">
-        <div class="px-6">
-          <div class="flex justify-between items-center h-16">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:block">
-              {{ currentPageTitle }}
-            </span>
-            <div class="flex items-center gap-4">
-              <div class="h-8 w-[1px] bg-slate-200 mx-1"></div>
-              <div class="flex items-center gap-3 cursor-pointer group">
-                <div class="text-right hidden sm:block">
-                  <p class="text-sm font-semibold text-slate-900 leading-none group-hover:text-primary transition-colors">Admin Local</p>
-                  <p class="text-xs text-slate-500 mt-1">Sede Lima Norte</p>
-                </div>
-                <div class="size-10 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center shadow-sm">
-                  <span class="text-primary font-bold text-sm">AL</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-      -->
       <!-- Routed page content -->
       <main class="flex-1 overflow-auto">
         <router-view />
@@ -91,7 +68,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import AppNavbar from '@/components/common/AppNavbar.vue'
 
@@ -104,15 +81,6 @@ const navLinks = [
   { path: '/dashboard/ventas',    label: 'Ventas',     icon: 'receipt_long' },
   { path: '/dashboard/clientes',  label: 'Clientes',   icon: 'group'        }
 ]
-
-const pageTitles = {
-  '/dashboard':            'Panel de Control',
-  '/dashboard/inventario': 'Gestión de Inventario',
-  '/dashboard/ventas':     'Gestión de Ventas',
-  '/dashboard/clientes':   'Gestión de Clientes'
-}
-
-const currentPageTitle = computed(() => pageTitles[route.path] || 'Panel de Control')
 
 const isActive = (path) => {
   if (path === '/dashboard' && route.path === '/dashboard') return true

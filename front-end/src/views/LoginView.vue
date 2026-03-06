@@ -22,10 +22,7 @@
       <div class="w-full max-w-[440px] flex flex-col gap-8">
         <!-- Branding -->
         <div class="flex flex-col items-center lg:items-start gap-2">
-          <AppLogo class="mb-2" />
-          <h2 class="text-text-secondary dark:text-gray-400 text-base font-normal">
-            Tu negocio, bajo control
-          </h2>
+          <AppLogo class="mb-2" size="lg" />
         </div>
 
         <!-- Welcome Message -->

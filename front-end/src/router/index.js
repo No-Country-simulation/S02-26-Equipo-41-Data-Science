@@ -88,13 +88,13 @@ const router = createRouter({
       meta: { requiresAuth: true },
       children: [
         {
-          path: '',
+          path: 'listado',
           name: 'sales-list',
           component: () => import('@/views/sales/SalesList.vue'),
           meta: { title: 'Listado de Ventas' }
         },
         {
-          path: 'crear',
+          path: '',
           name: 'sales-create',
           component: () => import('@/views/sales/SalesCreate.vue'),
           meta: { title: 'Crear Venta' }
@@ -124,7 +124,7 @@ const router = createRouter({
     },
     {
       path: '/:pathMatch(.*)*',
-      redirect: '/'
+      redirect: '/login'
     }
   ]
 })
