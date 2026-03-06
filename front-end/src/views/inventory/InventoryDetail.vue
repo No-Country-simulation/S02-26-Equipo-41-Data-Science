@@ -65,9 +65,9 @@
         <!-- Imagen principal -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden aspect-square shadow-sm flex items-center justify-center relative">
           <div
-            v-if="product.imagen_url"
+            v-if="selectedVariant"
             class="absolute inset-0 bg-center bg-no-repeat bg-cover"
-            :style="`background-image: url('${product.imagen_url}')`"
+            :style="`background-image: url('${selectedVariant.imagen_url}')`"
           ></div>
           <div
             v-else
@@ -89,9 +89,9 @@
         <div class="flex gap-3 overflow-x-auto pb-2">
           <div
             class="size-20 flex-shrink-0 rounded-lg border-2 border-primary overflow-hidden cursor-pointer"
-            :style="product.imagen_url ? `background-image: url('${product.imagen_url}'); background-size: cover; background-position: center;` : ''"
+            :style="selectedVariant ? `background-image: url('${selectedVariant.imagen_url}'); background-size: cover; background-position: center;` : ''"
           >
-            <div v-if="!product.imagen_url" class="w-full h-full bg-slate-100 flex items-center justify-center">
+            <div v-if="!selectedVariant" class="w-full h-full bg-slate-100 flex items-center justify-center">
               <span class="material-symbols-outlined text-slate-400">image</span>
             </div>
           </div>
@@ -418,6 +418,8 @@ const selectedVariant = computed(() => {
     v.color === selectedColor.value && v.talla === selectedSize.value
   )
 })
+
+console.log('variante seleccionada:', selectedVariant.value)
 
 // ==========================================
 // METHODS
