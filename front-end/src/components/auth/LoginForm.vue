@@ -134,7 +134,7 @@ const handleSubmit = async () => {
 
     if (result.success) {
       // Redirect to dashboard
-      router.push({ name: 'home' })
+      router.push({ name: 'dashboard' })
       toast.success('Sesión iniciada correctamente')
     } else {
       generalError.value = 'Credenciales incorrectas. Por favor, intenta nuevamente.'

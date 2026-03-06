@@ -10,15 +10,41 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
     {
-      path: '/',
-      name: 'home',
-      component: () => import('@/views/HomeView.vue'),
-      meta: { requiresAuth: true }
+      path: '/dashboard',
+      name: 'dashboard',
+      component: () => import('@/views/dashboard/DashboardLayout.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        { 
+          path: '',
+          name: 'dashboard-home',
+          component: () => import('@/views/dashboard/DashboardHome.vue'),
+          meta: { title: 'Panel de Control' }
+        },
+        {
+          path: 'ventas',
+          name: 'dashboard-sales',
+          component: () => import('@/views/dashboard/DashboardSales.vue'),
+          meta: { title: 'Ventas' }
+        },
+        {
+          path: 'inventario',
+          name: 'dashboard-inventory',
+          component: () => import('@/views/dashboard/DashboardInventory.vue'),
+          meta: { title: 'Inventario' }
+        },
+        { 
+          path: 'clientes', 
+          name: 'dashboard-customers',
+          component: () => import('@/views/dashboard/DashboardCustomers.vue'), 
+          meta: { title: 'Clientes' } 
+        },
+      ]
     },
     // Rutas de Inventario con subrutas
     {
       path: '/inventario',
-      component: () => import('@/views/inventory/InventoryLayout.vue'),
+      component: () => import('@/views/AppLayout.vue'),
       meta: { requiresAuth: true },
       children: [
         {
@@ -48,7 +74,7 @@ const router = createRouter({
           props: true // Esto pasa el :id como prop automáticamente
         },
         {
-          path: ':id/ajustar-stock',
+          path: '/inventario/:productId/variante/:variantId/ajustar',
           name: 'inventory-adjust-stock',
           component: () => import('@/views/inventory/InventoryStockAdjust.vue'),
           meta: { title: 'Ajustar Stock' },
@@ -58,17 +84,17 @@ const router = createRouter({
     },
     {
       path: '/ventas',
-      component: () => import('@/views/sales/SalesLayout.vue'),
+      component: () => import('@/views/AppLayout.vue'),
       meta: { requiresAuth: true },
       children: [
         {
-          path: '',
+          path: 'listado',
           name: 'sales-list',
           component: () => import('@/views/sales/SalesList.vue'),
           meta: { title: 'Listado de Ventas' }
         },
         {
-          path: 'crear',
+          path: '',
           name: 'sales-create',
           component: () => import('@/views/sales/SalesCreate.vue'),
           meta: { title: 'Crear Venta' }
@@ -78,12 +104,27 @@ const router = createRouter({
     {
       path: '/clientes',
       name: 'customers',
-      component: () => import('@/views/CustomersView.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('@/views/AppLayout.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path:'',
+          name: 'customer-list',
+          component: () => import('@/views/customer/CustomerList.vue'),
+          meta: { title: 'Listado de Clientes' }
+        },
+        {
+          path: ':id',
+          name: 'customer-detail',
+          component: () => import('@/views/customer/CustomerDetail.vue'),
+          meta: { title: 'Detalle de Cliente' },
+          props: true
+        }
+      ]  
     },
     {
       path: '/:pathMatch(.*)*',
-      redirect: '/'
+      redirect: '/login'
     }
   ]
 })
@@ -106,7 +147,7 @@ router.beforeEach(async (to, from, next) => {
     }
 
     if (to.name === 'login' && authStore.isAuthenticated) {
-      next({ name: 'home' })
+      next({ name: 'dashboard' })
       return
     }
   }

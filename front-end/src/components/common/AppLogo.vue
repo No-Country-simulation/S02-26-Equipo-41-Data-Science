@@ -1,20 +1,10 @@
 <template>
   <div :class="['flex items-center gap-2', centerClass]">
-    <span 
-      aria-hidden="true" 
-      class="material-symbols-outlined text-primary"
-      :class="iconSizeClass"
-    >
-      {{ icon }}
-    </span>
-    <h1 
-      :class="[
-        'text-text-primary dark:text-white font-black tracking-tight uppercase',
-        textSizeClass
-      ]"
-    >
-      DATAMARK
-    </h1>
+    <img 
+      src="@/assets/img/logo-compania.png"
+      alt="Logo de la compañia"
+      :class="logoSizeClass"
+    />
   </div>
 </template>
 
@@ -37,25 +27,15 @@ const props = defineProps({
   }
 })
 
-const iconSizeClass = computed(() => {
-  switch (props.size) {
-    case 'sm':
-      return 'text-2xl'
-    case 'lg':
-      return 'text-5xl'
-    default:
-      return 'text-4xl'
-  }
-})
 
-const textSizeClass = computed(() => {
+const logoSizeClass = computed(() => {
   switch (props.size) {
     case 'sm':
-      return 'text-xl'
+      return 'h-6 w-auto'
     case 'lg':
-      return 'text-4xl'
+      return 'h-18 w-auto'
     default:
-      return 'text-3xl'
+      return 'h-12 w-auto'
   }
 })
 
