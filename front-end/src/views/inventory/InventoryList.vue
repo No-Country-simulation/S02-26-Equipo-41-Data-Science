@@ -206,8 +206,8 @@ const { filters, setFilter, clear } = useFilters({
 
 const quickFilters = [
   { label: 'Todos', value: 'all' },
-  { label: 'Ropa', value: 'Ropa' },
-  { label: 'Calzado', value: 'Calzado' }
+  { label: 'Zapatillas', value: 'Zapatillas' },
+  { label: 'Polos', value: 'Polos' }, 
 ]
 
 const advancedFilters = [
@@ -261,6 +261,8 @@ async function fetchData() {
 
     products.value = data || []
     pagination.setTotal(count || 0)
+
+    console.log('Productos obtenidos:', products.value)
   } catch (err) {
     console.error('Error fetching products:', err)
   }
