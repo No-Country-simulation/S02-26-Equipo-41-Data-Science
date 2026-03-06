@@ -188,7 +188,7 @@ const formConfig = computed(() => {
     { value: null, label: 'Sin proveedor' },
     ...proveedores.value.map(p => ({
       value: p.proveedorid,
-      label: p.nombre
+      label: p.razonsocial
     }))
   ]
 
@@ -230,12 +230,9 @@ const formConfig = computed(() => {
       defaultValue: new Date().toISOString().split('T')[0]
     })
     .addSelectField('motivo', 'Motivo del Ajuste', [
-      { value: '', label: 'Seleccionar motivo' },
       { value: 'Compra', label: 'Nueva compra / Abastecimiento' },
       { value: 'Devolución', label: 'Devolución de cliente' },
       { value: 'Daño', label: 'Producto dañado / Merma' },
-      { value: 'Error de conteo', label: 'Error en conteo previo' },
-      { value: 'Robo', label: 'Robo / Pérdida' },
       { value: 'Otro', label: 'Otro (Especificar en notas)' }
     ], { validation: FormValidation.required() })
     .addTextAreaField('notas', 'Notas Adicionales', {
