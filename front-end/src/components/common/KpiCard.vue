@@ -4,8 +4,8 @@
     :class="[
       'p-5 rounded-xl border shadow-sm flex flex-col justify-between',
       variant === 'danger'
-        ? 'bg-red-50 border-red-100 relative overflow-hidden group'
-        : 'bg-white border-slate-100'
+        ? 'bg-red-50 border-red-100 dark:bg-red-900/20 dark:border-red-500 relative overflow-hidden group'
+        : 'bg-white dark:bg-background-dark border-slate-100 dark:border-slate-400'
     ]"
   >
     <div class="z-10">
@@ -22,7 +22,7 @@
         <h3
           :class="[
             'text-2xl font-bold',
-            variant === 'danger' ? 'text-red-700' : 'text-slate-900'
+            variant === 'danger' ? 'text-red-700' : 'text-slate-900 dark:text-white'
           ]"
         >
           {{ value }}

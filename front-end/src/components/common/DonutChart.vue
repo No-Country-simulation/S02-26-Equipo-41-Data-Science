@@ -13,7 +13,7 @@
       />
     </svg>
     <div class="absolute inset-0 flex flex-col items-center justify-center">
-      <span class="text-3xl font-bold text-slate-900">{{ percentage }}%</span>
+      <span class="text-3xl font-bold text-slate-900 dark:text-white">{{ percentage }}%</span>
       <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{{ label }}</span>
     </div>
   </div>
