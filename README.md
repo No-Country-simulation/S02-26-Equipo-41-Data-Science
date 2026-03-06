@@ -1,287 +1,231 @@
-# DATAMARK
+🇵🇪 StockPro Perú
+Plataforma B2B SaaS para la Gestión Inteligente de Inventarios y Ventas
 
-**DATAMARK** es una plataforma **B2B SaaS en etapa MVP** orientada a pequeños negocios de **ropa y calzado en provincias del Perú**, cuyo objetivo es **centralizar y visualizar información clave del negocio** como ventas, inventario y clientes.
+StockPro Perú es una solución integral desarrollada por Datamark para profesionalizar el sector minorista de ropa y calzado en las provincias del Perú.
 
-El sistema busca reemplazar procesos manuales o desorganizados (cuadernos, planillas aisladas o registros dispersos) por una **solución digital simple basada en datos**, permitiendo a los comerciantes tomar decisiones informadas sin necesidad de conocimientos técnicos.
+La plataforma conecta la operación física de las tiendas con inteligencia de datos en la nube, transformando registros manuales en decisiones estratégicas basadas en datos.
 
----
+👥 Equipo — Datamark
 
-# 📌 Problema
+Proyecto desarrollado para NoCountry por:
 
-Muchos pequeños negocios del sector retail en provincias gestionan su información mediante:
+Rol	Integrante
+PMO / QA Automation	Enzo Zambon
+CX / UX Designer	Claudia Rivero
+Frontend Engineer	Franco Kumichel
+Backend Engineer	Francisco Lledo
+Data & Analytics	Gonzalo Sagredo
+Data & Analytics	Giselle Cifuentes
+QA Automation	Johanna Procopio
+🚀 Problema y Solución
+El Problema
 
-* Registros manuales
-* Archivos dispersos
-* Planillas de cálculo sin integración
+Muchos pequeños comercios en provincias operan con:
 
-Esto genera:
+registros manuales
 
-* Errores en el registro de ventas
-* Falta de control sobre el stock
-* Información inconsistente
-* Decisiones basadas en intuición
-* Pérdidas económicas evitables
+control limitado de inventario
 
-DATAMARK busca solucionar este problema mediante una **plataforma simple que centralice los datos del negocio y los presente en dashboards claros**.
+poca visibilidad sobre ventas
 
----
+decisiones sin datos
 
-# 🎯 Objetivo del Proyecto
+Esto genera pérdidas económicas, falta de control y baja eficiencia operativa.
 
-Desarrollar y validar un **Producto Mínimo Viable (MVP)** de una plataforma SaaS que permita a pequeños comercios:
+Nuestra Solución
 
-* Centralizar información de **ventas**
-* Gestionar **inventarios**
-* Registrar **clientes**
-* Visualizar **indicadores clave del negocio**
+StockPro Perú ofrece:
 
-Todo esto mediante **una interfaz simple e intuitiva**.
+📦 Centralización
 
----
+Toda la información del negocio en una única plataforma.
 
-# 🧩 Características del MVP
+🎯 Control Milimétrico
 
-El MVP contempla las siguientes funcionalidades principales:
+Gestión por variantes de producto:
 
-* Visualización de **ventas**
-* Control de **inventario**
-* Registro de **clientes**
-* Visualización de **dashboards con métricas clave**
-* Interfaz simple orientada a usuarios no técnicos
+tallas
 
----
+colores
 
-# 🏗️ Arquitectura del Sistema
+SKUs
 
-El sistema se basa en una **arquitectura de tres capas**:
+📊 Democratización de Datos
 
-### 1️⃣ Capa de Presentación
+Dashboards intuitivos para que cualquier comerciante pueda entender su negocio sin conocimientos técnicos.
 
-Aplicación web que permite a los usuarios:
+🔍 Trazabilidad Total
 
-* Visualizar dashboards
-* Consultar información de ventas
-* Gestionar inventario
+Auditoría completa de cada unidad:
+Proveedor → Inventario → Venta → Cliente
 
-Tecnologías principales:
+🛠️ Stack Tecnológico
+Frontend
 
-* Vue.js
-* Vite
+Vite + React
+Interfaz moderna, rápida y reactiva.
 
----
+Tailwind CSS
+Framework de estilos ágil y responsivo.
 
-### 2️⃣ Capa de Lógica de Negocio
+Dashboards Analíticos
+Visualización de métricas clave como:
 
-API que se encarga de:
+ventas totales
 
-* Procesar solicitudes del frontend
-* Validar datos
-* Aplicar reglas de negocio
+productos más vendidos
 
----
+stock crítico
 
-### 3️⃣ Capa de Datos
+Backend & Datos
 
-Base de datos que centraliza la información del sistema:
+NestJS
+Arquitectura modular y escalable para el backend.
 
-* Ventas
-* Productos
-* Inventarios
-* Clientes
+Supabase (PostgreSQL)
+Base de datos, autenticación y almacenamiento en la nube.
 
----
+Prisma ORM
+Gestión de modelos de datos y migraciones.
 
-### 4️⃣ Integración y Automatización
+DevOps & Calidad (CI/CD)
 
-Se implementa una capa de integración continua que incluye:
+Jenkins
+Orquestación de pipelines de integración continua.
 
-* Control de versiones con Git
-* Automatización de pruebas
-* Integración continua
+Docker
+Contenerización para garantizar paridad entre entornos.
 
----
+Testing Stack
 
-# ⚙️ Tecnologías Utilizadas
+Jest → pruebas unitarias
 
-### Frontend
+Testing Library → pruebas de componentes
 
-* JavaScript
-* Vue.js
-* Vite
+Cypress → pruebas end-to-end
 
-### Backend
+📊 Modelo de Datos
 
-* Node.js
-* API REST
+El sistema utiliza un Snowflake Schema para garantizar escalabilidad y consistencia del negocio.
 
-### Base de datos
+🔴 Gestión de Identidad
 
-* Supabase
+Control de acceso basado en:
 
-### Testing
+sucursales
 
-* Jest
-* Cypress
-* Testing Library
+roles de usuario
 
-### CI/CD
+🟢 Catálogo Maestro
 
-* Jenkins
-* Git
+Organización jerárquica de productos:
 
-### Deploy
+marcas
 
-* Vercel (frontend)
+categorías
 
----
+🟣 Núcleo de Inventario
 
-# 📂 Estructura del Proyecto
+El corazón del sistema:
 
-```
-DATAMARK/
-│
-├── front-end/          # Aplicación Vue
-│   ├── src/
-│   ├── components/
-│   ├── pages/
-│   └── package.json
-│
-├── backend/            # API del sistema
-│
-├── docs/               # Documentación adicional
-│
-└── README.md
-```
+gestión de variantes
 
----
+movimientos de stock
 
-# 🚀 Instalación y Ejecución
+Kardex
 
-## 1 Clonar el repositorio
+🟠 Ciclo de Ventas
 
-```
-git clone https://github.com/usuario/datamark.git
-cd datamark
-```
+Registro de:
 
----
+transacciones
 
-## 2 Ejecutar el Frontend
+clientes
 
-```
-cd front-end
-npm install
-npm run dev
-```
+métodos de pago
 
-La aplicación se ejecutará en:
+🔵 Abastecimiento
 
-```
-http://localhost:5173
-```
+Relación con proveedores y control de costos.
 
----
+⚙️ Pipeline de Integración Continua
 
-# 🌐 Deploy
+El pipeline automatizado en Jenkins actúa como garante de calidad del código.
 
-El frontend se encuentra desplegado utilizando **Vercel**.
+COMMIT
+   ↓
+BUILD
+   ↓
+TEST
+   ↓
+DEPLOY
+Etapas
 
-Cada push al repositorio genera automáticamente un nuevo deploy.
+COMMIT
 
----
+Activación automática vía GitHub Webhooks
 
-# 🧪 Testing
+BUILD
 
-El proyecto incluye diferentes tipos de pruebas:
+Construcción de imágenes Docker
 
-### Tests unitarios
+TEST
 
-* Jest
+Ejecución de:
 
-### Tests de interfaz
+tests unitarios
 
-* Testing Library
+tests de integración
 
-### Tests end-to-end
+smoke tests
 
-* Cypress
+DEPLOY
 
----
+Despliegue automático cuando todos los tests pasan exitosamente
 
-# 📊 Metodología de Desarrollo
+📈 Logros del MVP
 
-El desarrollo del proyecto se organizó en **5 semanas**:
+✅ Centralización de ventas, inventarios y clientes
 
-### Semana 1
+✅ Implementación de dashboards operativos
 
-* Definición del problema
-* Identificación del usuario objetivo
-* Definición de roles del equipo
+✅ Migración de entorno local (Docker) a la nube (Supabase)
 
-### Semana 2
+✅ Sistema de Health Checks en tiempo real
 
-* Diseño de arquitectura
-* Definición de requerimientos
-* Diseño inicial de la base de datos
+✅ Base de datos escalable para crecimiento del negocio
 
-### Semana 3
+🔮 Futuras Mejoras
+💰 Módulo de Caja
 
-* Desarrollo inicial del MVP
-* Implementación de base de datos
-* Desarrollo de API básica
-* Primera versión de la interfaz
+apertura de caja
 
-### Semana 4
+cierre de caja
 
-* Integración frontend/backend
-* Implementación de pruebas automatizadas
-* Integración continua
+arqueo diario
 
-### Semana 5
+🧾 Desglose Tributario
 
-* Pruebas finales
-* Refinamiento de funcionalidades
-* Documentación del proyecto
-* Presentación del MVP
+cálculo automático de IGV
 
----
+cumplimiento fiscal
 
-# 👥 Equipo de Trabajo
+🔐 Seguridad Avanzada
 
-| Rol                       | Integrante        |
-| ------------------------- | ----------------- |
-| PMO                       | Enzo Zambón       |
-| CX / UX Designer          | Claudia Rivero    |
-| Frontend Engineer         | Franco Kumichel   |
-| Backend Engineer          | Francisco Lledo   |
-| Data / Analytics Engineer | Gonzalo Sagredo   |
-| Data / Analytics Engineer | Johanna Procopio  |
-| QA Automation             | Giselle Cifuentes |
+Sistema RBAC (Role-Based Access Control)
 
----
+🔄 Gestión de Devoluciones
 
-# 📚 Aprendizajes del Proyecto
+Proceso formal para:
 
-Durante el desarrollo del MVP se exploraron diferentes aspectos del ciclo de desarrollo de software:
+devoluciones
 
-* Diseño de arquitectura de sistemas
-* Desarrollo de aplicaciones web modernas
-* Automatización de pruebas
-* Integración continua
-* Trabajo colaborativo en equipo
+cambios
 
-El resultado es un **prototipo funcional que demuestra la viabilidad técnica y el valor potencial de la solución**.
+auditoría de stock
 
----
+🎯 Visión
 
-# 📌 Estado del Proyecto
+"Nuestra meta es que cada negocio, sin importar su tamaño, tenga el poder de los datos a su favor."
 
-🚧 **MVP en desarrollo / validación**
-
-El proyecto continúa evolucionando con el objetivo de mejorar funcionalidades, experiencia de usuario y capacidad de análisis de datos.
-
----
-
-# 📄 Licencia
-
-Este proyecto fue desarrollado con fines **académicos y de aprendizaje** en el marco de una simulación laboral.
+— Datamark
