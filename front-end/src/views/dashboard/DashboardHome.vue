@@ -4,8 +4,8 @@
 
       <!-- Page header -->
       <div class="mb-8">
-        <h2 class="text-2xl font-bold text-slate-900">Resumen General</h2>
-        <p class="text-slate-500 text-sm">Bienvenido de nuevo. Aquí tienes el estado de tu tienda hoy.</p>
+        <h1 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Resumen General</h1>
+        <p class="text-gray-500 dark:text-gray-400 text-sm">Bienvenido de nuevo. Aquí tienes el estado de tu tienda hoy.</p>
       </div>
 
       <!-- KPI Cards -->
@@ -25,37 +25,33 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
         <!-- Sales trend -->
-        <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+        <div class="lg:col-span-2 bg-white dark:bg-background-dark p-6 rounded-xl border border-slate-100 dark:border-slate-400 shadow-sm">
           <div class="flex items-center justify-between mb-6">
             <div>
-              <h3 class="text-lg font-bold text-slate-900">Ventas (Últimos 7 días)</h3>
-              <p class="text-sm text-slate-500">Tendencia de ingresos semanales</p>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white">Ventas (Últimos 7 días)</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Tendencia de ingresos semanales</p>
             </div>
             <select class="text-xs font-semibold border border-slate-200 rounded-lg px-3 py-1.5 outline-none text-slate-600">
               <option>Esta semana</option>
               <option>Semana pasada</option>
             </select>
           </div>
-          <SalesLineChart :data="salesWeekData" />
-          <div class="flex justify-between mt-4 px-2 border-t border-slate-50 pt-2">
-            <span v-for="d in ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']" :key="d"
-              class="text-[10px] font-bold text-slate-400 uppercase">{{ d }}</span>
-          </div>
+          <BaseLineChart :labels="sales.map(v => v.fecha)" :data="sales.map(v => v.monto)" title="Ventas" height="250" />
         </div>
 
         <!-- Inventory donut -->
-        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-          <h3 class="text-lg font-bold text-slate-900 mb-1">Distribución de Inventario</h3>
-          <p class="text-sm text-slate-500 mb-6">Ropa vs Calzado</p>
+        <div class="bg-white dark:bg-background-dark p-6 rounded-xl border border-slate-100 dark:border-slate-400 shadow-sm">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Distribución de Inventario</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Ropa vs Calzado</p>
           <div class="flex flex-col items-center">
             <DonutChart :percentage="70" label="Calzado" />
             <div class="mt-6 w-full space-y-3">
               <div v-for="item in inventoryDist" :key="item.label" class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <div :class="['size-3 rounded-full', item.color]"></div>
-                  <span class="text-sm font-medium text-slate-600">{{ item.label }}</span>
+                  <span class="text-sm font-medium text-slate-600 dark:text-slate-300">{{ item.label }}</span>
                 </div>
-                <span class="text-sm font-bold text-slate-900">{{ item.units }}</span>
+                <span class="text-sm font-bold text-slate-900 dark:text-white">{{ item.units }}</span>
               </div>
             </div>
           </div>
@@ -64,7 +60,7 @@
 
       <!-- Category cards -->
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-bold text-slate-900">Stock por Categorías Principales</h3>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Stock por Categorías Principales</h3>
         <button class="text-primary text-sm font-bold hover:underline" @click="$router.push('/dashboard/inventario')">
           Ver inventario completo
         </button>
@@ -82,8 +78,17 @@
 import KpiCard       from '@/components/common/KpiCard.vue'
 import CategoryCard  from '@/components/common/CategoryCard.vue'
 import DonutChart    from '@/components/common/DonutChart.vue'
+import BaseLineChart from '@/components/common/BaseLineChart.vue'
 
-const salesWeekData = [80, 45, 62, 30, 20, 35, 10]  // SVG path reference values
+const sales = [
+  { fecha: "2026-03-01", monto: 120000 },
+  { fecha: "2026-03-02", monto: 95000 },
+  { fecha: "2026-03-03", monto: 132000 },
+  { fecha: "2026-03-04", monto: 110000 },
+  { fecha: "2026-03-05", monto: 145000 }
+]
+
+console.log("Sales data:", sales.map(v => v.monto))
 
 const inventoryDist = [
   { label: 'Calzado', units: '1,036 uni.', color: 'bg-primary' },

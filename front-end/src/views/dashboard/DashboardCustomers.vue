@@ -4,8 +4,8 @@
 
       <!-- Header -->
       <div class="mb-8">
-        <h2 class="text-2xl font-bold text-slate-900">Gestión de Clientes</h2>
-        <p class="text-slate-500 text-sm">Seguimiento de clientes, compras y fidelización.</p>
+        <h2 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Gestión de Clientes</h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm">Seguimiento de clientes, compras y fidelización.</p>
       </div>
 
       <!-- KPIs -->
@@ -27,60 +27,34 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
         <!-- Activity line chart -->
-        <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+        <div class="lg:col-span-2 bg-white dark:bg-background-dark p-6 rounded-xl border border-slate-100 dark:border-slate-400 shadow-sm">
           <div class="flex items-center justify-between mb-6">
             <div>
-              <h3 class="text-lg font-bold text-slate-900">Nuevos Clientes</h3>
-              <p class="text-sm text-slate-500">Captación mensual — último año</p>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white">Clientes</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Cantidad de clientes </p>
             </div>
+            <select class="text-xs font-semibold border border-slate-200 rounded-lg px-3 py-1.5 outline-none text-slate-600 dark:text-white">
+              <option>Esta semana</option>
+              <option>Semana pasada</option>
+            </select>
           </div>
-
-          <!-- Area chart -->
-          <div class="h-[200px] relative">
-            <svg class="w-full h-full" viewBox="0 0 700 180" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="client-gradient" x1="0%" x2="0%" y1="0%" y2="100%">
-                  <stop offset="0%" stop-color="#1a59d5" stop-opacity="0.15"/>
-                  <stop offset="100%" stop-color="#1a59d5" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              <!-- Area fill -->
-              <path
-                d="M0,140 C58,120 116,90 175,100 C233,110 291,70 350,60 C408,50 466,80 525,50 C583,20 641,30 700,10 L700,180 L0,180 Z"
-                fill="url(#client-gradient)"
-              />
-              <!-- Line -->
-              <path
-                d="M0,140 C58,120 116,90 175,100 C233,110 291,70 350,60 C408,50 466,80 525,50 C583,20 641,30 700,10"
-                fill="none" stroke="#1a59d5" stroke-width="2.5" stroke-linecap="round"
-              />
-              <!-- Data points -->
-              <circle v-for="(pt, i) in chartPoints" :key="i"
-                :cx="pt.x" :cy="pt.y" r="4"
-                fill="white" stroke="#1a59d5" stroke-width="2"
-              />
-            </svg>
-          </div>
-          <div class="flex justify-between mt-2 px-1 border-t border-slate-50 pt-2">
-            <span v-for="m in months" :key="m" class="text-[9px] font-bold text-slate-400 uppercase">{{ m }}</span>
-          </div>
-        </div>
-
+          <BaseLineChart :labels="months" :data="[15, 12, 18, 14, 20, 16, 22, 18, 25, 20, 21, 23]" height="250" />
+        </div> 
         <!-- Donut: clientes por segmento -->
-        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-          <h3 class="text-lg font-bold text-slate-900 mb-1">Segmentación</h3>
-          <p class="text-sm text-slate-500 mb-6">Tipo de cliente</p>
+        <div class="bg-white dark:bg-background-dark p-6 rounded-xl border border-slate-100 dark:border-slate-400 shadow-sm">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Segmentación</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Tipo de cliente</p>
           <div class="flex flex-col items-center">
             <DonutChart :percentage="52" label="Frecuentes" />
             <div class="mt-6 w-full space-y-2.5">
               <div v-for="seg in segments" :key="seg.label" class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <div :class="['size-2.5 rounded-full', seg.color]"></div>
-                  <span class="text-xs font-medium text-slate-600">{{ seg.label }}</span>
+                  <span class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ seg.label }}</span>
                 </div>
                 <div class="text-right">
-                  <span class="text-xs font-bold text-slate-900">{{ seg.pct }}%</span>
-                  <span class="text-[10px] text-slate-400 ml-1">({{ seg.count }})</span>
+                  <span class="text-xs font-bold text-slate-900 dark:text-white">{{ seg.pct }}%</span>
+                  <span class="text-[10px] text-slate-400 dark:text-slate-400 ml-1">({{ seg.count }})</span>
                 </div>
               </div>
             </div>
@@ -89,18 +63,18 @@
       </div>
 
       <!-- Top customers table -->
-      <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+      <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-400 flex items-center justify-between">
           <div>
-            <h3 class="text-lg font-bold text-slate-900">Top Clientes del Mes</h3>
-            <p class="text-sm text-slate-500">Ordenados por monto de compra</p>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Top Clientes del Mes</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Ordenados por monto de compra</p>
           </div>
           <button class="text-primary text-sm font-bold hover:underline">Ver todos</button>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="bg-slate-50 text-left">
+              <tr class="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 text-left">
                 <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">#</th>
                 <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Cliente</th>
                 <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Compras</th>
@@ -109,8 +83,8 @@
                 <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Segmento</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-50">
-              <tr v-for="(client, i) in topClients" :key="client.name" class="hover:bg-slate-50 transition-colors">
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+              <tr v-for="(client, i) in topClients" :key="client.name" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors group">
                 <td class="px-6 py-4">
                   <span :class="[
                     'inline-flex size-6 items-center justify-center rounded-full text-xs font-bold',
@@ -155,14 +129,9 @@
 <script setup>
 import KpiCard    from '@/components/common/KpiCard.vue'
 import DonutChart from '@/components/common/DonutChart.vue'
+import BaseLineChart from '@/components/common/BaseLineChart.vue'
 
 const months = ['Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic','Ene','Feb','Mar']
-
-// Approximate SVG points matching the path curves
-const chartPoints = [
-  { x: 0,   y: 140 }, { x: 175, y: 100 }, { x: 350, y: 60  },
-  { x: 525, y: 50  }, { x: 700, y: 10  }
-]
 
 const segments = [
   { label: 'Frecuentes', pct: 52, count: 181, color: 'bg-primary'   },

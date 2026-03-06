@@ -4,8 +4,8 @@
 
       <!-- Header -->
       <div class="mb-8">
-        <h2 class="text-2xl font-bold text-slate-900">Gestión de Ventas</h2>
-        <p class="text-slate-500 text-sm">Análisis de ventas, ingresos y rendimiento comercial.</p>
+        <h2 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Gestión de Ventas</h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm">Análisis de ventas, ingresos y rendimiento comercial.</p>
       </div>
 
       <!-- KPIs -->
@@ -27,13 +27,13 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
         <!-- Bar chart: ventas por día de la semana -->
-        <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+        <div class="lg:col-span-2 bg-white dark:bg-background-dark p-6 rounded-xl border border-slate-100 dark:border-slate-400 shadow-sm">
           <div class="flex items-center justify-between mb-6">
             <div>
-              <h3 class="text-lg font-bold text-slate-900">Ventas por Día</h3>
-              <p class="text-sm text-slate-500">Ingresos diarios del mes en curso</p>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white">Ventas por Día</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Ingresos diarios del mes en curso</p>
             </div>
-            <select class="text-xs font-semibold border border-slate-200 rounded-lg px-3 py-1.5 outline-none text-slate-600">
+            <select class="text-xs font-semibold border border-slate-200 rounded-lg px-3 py-1.5 outline-none text-slate-600 dark:text-white">
               <option>Marzo 2024</option>
               <option>Febrero 2024</option>
             </select>
@@ -59,71 +59,26 @@
         </div>
 
         <!-- Donut: ventas por categoría -->
-        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-          <h3 class="text-lg font-bold text-slate-900 mb-1">Ventas por Categoría</h3>
-          <p class="text-sm text-slate-500 mb-6">Participación este mes</p>
+        <div class="bg-white dark:bg-background-dark p-6 rounded-xl border border-slate-100 dark:border-slate-400 shadow-sm">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Ventas por Categoría</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Participación este mes</p>
           <div class="flex flex-col items-center">
             <DonutChart :percentage="58" label="Calzado" />
             <div class="mt-6 w-full space-y-2.5">
               <div v-for="cat in salesByCategory" :key="cat.label" class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <div :class="['size-2.5 rounded-full', cat.color]"></div>
-                  <span class="text-xs font-medium text-slate-600">{{ cat.label }}</span>
+                  <span class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ cat.label }}</span>
                 </div>
                 <div class="text-right">
-                  <span class="text-xs font-bold text-slate-900">{{ cat.pct }}%</span>
-                  <span class="text-[10px] text-slate-400 ml-1">{{ cat.amount }}</span>
+                  <span class="text-xs font-bold text-slate-900 dark:text-white">{{ cat.pct }}%</span>
+                  <span class="text-[10px] text-slate-400 dark:text-slate-400 ml-1">{{ cat.amount }}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Recent sales table -->
-      <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-          <div>
-            <h3 class="text-lg font-bold text-slate-900">Últimas Ventas</h3>
-            <p class="text-sm text-slate-500">Registro de transacciones recientes</p>
-          </div>
-          <button class="text-primary text-sm font-bold hover:underline">Ver todas</button>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="bg-slate-50 text-left">
-                <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">ID Venta</th>
-                <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Producto</th>
-                <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Cliente</th>
-                <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Cantidad</th>
-                <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Total</th>
-                <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Estado</th>
-                <th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Hora</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-50">
-              <tr v-for="sale in recentSales" :key="sale.id" class="hover:bg-slate-50 transition-colors">
-                <td class="px-6 py-4 font-mono text-xs text-slate-500 font-bold">{{ sale.id }}</td>
-                <td class="px-6 py-4 font-semibold text-slate-800">{{ sale.product }}</td>
-                <td class="px-6 py-4 text-slate-600">{{ sale.client }}</td>
-                <td class="px-6 py-4 text-slate-600">{{ sale.qty }}</td>
-                <td class="px-6 py-4 font-bold text-slate-900">{{ sale.total }}</td>
-                <td class="px-6 py-4">
-                  <span :class="[
-                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide',
-                    sale.status === 'Completado' ? 'bg-green-100 text-green-700' :
-                    sale.status === 'Pendiente'  ? 'bg-amber-100 text-amber-700' :
-                    'bg-red-100 text-red-700'
-                  ]">{{ sale.status }}</span>
-                </td>
-                <td class="px-6 py-4 text-[11px] text-slate-400 font-medium">{{ sale.time }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
     </div>
   </div>
 </template>
@@ -152,18 +107,10 @@ const barData = [
 const maxBarValue = computed(() => Math.max(...barData.map(b => b.value)))
 
 const salesByCategory = [
-  { label: 'Calzado Urbano', pct: 58, amount: 'S/ 14,384', color: 'bg-primary' },
+  { label: 'Calzado', pct: 58, amount: 'S/ 14,384', color: 'bg-primary' },
   { label: 'Polos',          pct: 22, amount: 'S/ 5,456',  color: 'bg-blue-300' },
   { label: 'Pantalones',     pct: 13, amount: 'S/ 3,224',  color: 'bg-slate-300' },
   { label: 'Botas',          pct: 7,  amount: 'S/ 1,736',  color: 'bg-slate-200' },
 ]
 
-const recentSales = [
-  { id: '#V-0231', product: 'Zapatilla Urbana Blanca',  client: 'Juan Pérez',      qty: 2, total: 'S/ 180.00', status: 'Completado', time: '11:42 a.m.' },
-  { id: '#V-0230', product: 'Polo Oversize Negro',       client: 'María Torres',    qty: 3, total: 'S/ 135.00', status: 'Completado', time: '11:15 a.m.' },
-  { id: '#V-0229', product: 'Pantalón Cargo Beige',      client: 'Carlos Ríos',     qty: 1, total: 'S/ 89.90',  status: 'Pendiente',  time: '10:58 a.m.' },
-  { id: '#V-0228', product: 'Bota de Cuero Marrón',      client: 'Lucía Mamani',    qty: 1, total: 'S/ 220.00', status: 'Completado', time: '10:33 a.m.' },
-  { id: '#V-0227', product: 'Zapatilla Running Azul',    client: 'Diego Salcedo',   qty: 2, total: 'S/ 260.00', status: 'Completado', time: '09:47 a.m.' },
-  { id: '#V-0226', product: 'Polo Básico Blanco x3',     client: 'Ana Flores',      qty: 3, total: 'S/ 99.00',  status: 'Anulado',    time: '09:12 a.m.' },
-]
 </script>
