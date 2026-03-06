@@ -26,39 +26,50 @@
       </div>
     </div>
 
-    <!-- Acciones y perfil de usuario -->
-    <div class="flex items-center gap-4">
-      <!-- Botón de cerrar sesión -->
-      <button
-        @click="handleLogout"
-        class="navbar-logout-btn"
-        title="Cerrar sesión"
-      >
-        <span class="material-symbols-outlined text-lg">logout</span>
-        <span class="hidden lg:inline">Cerrar Sesión</span>
-      </button>
 
-      <!-- Divisor -->
-      <div class="navbar-divider"></div>
 
-      <!-- Perfil de usuario -->
-      <div class="flex items-center gap-3 pl-2">
-        <div class="flex flex-col items-end">
-          <span class="navbar-user-name">{{ userName }}</span>
-          <span class="navbar-user-location">{{ userLocation }}</span>
-        </div>
-        <div class="navbar-avatar" :title="userName">
-          {{ userInitials }}
-        </div>
+    <div class="flex items-center gap-8">
+      <div class="hidden lg:flex items-center gap-2 ml-6">
+        <span class="text-xs font-bold text-gray-500 uppercase">Sucursal:</span>
+
+        <select
+          v-model="selectedSucursal"
+          @change="changeSucursal"
+          class="dark:bg-transparent border-gray-200 dark:border-gray-500 rounded-md text-sm px-3 py-1.5 font-medium"
+        >
+          <option
+            v-for="sucursal in sucursalStore.sucursales"
+            :key="sucursal.sucursalid"
+            :value="sucursal.sucursalid"
+            class="text-black"
+          >
+            {{ sucursal.nombresucursal }}
+          </option>
+        </select>
+      </div>
+      <!-- Acciones y perfil de usuario -->
+      <div class="flex items-center gap-4">
+        <!-- Botón de cerrar sesión -->
+        <button
+          @click="handleLogout"
+          class="navbar-logout-btn"
+          title="Cerrar sesión"
+        >
+          <span class="material-symbols-outlined text-lg">logout</span>
+          <span class="hidden lg:inline">Cerrar Sesión</span>
+        </button>
       </div>
     </div>
+    
   </nav>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { onMounted, ref, computed } from 'vue'
+import { supabase } from '@/lib/supabaseClient'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useSucursalStore } from "@/stores/sucursal"
 import AppLogo from '@/components/common/AppLogo.vue'
 
 const props = defineProps({
@@ -72,6 +83,9 @@ const props = defineProps({
   }
 })
 
+const sucursalStore = useSucursalStore()
+const sucursales = []
+const selectedSucursal = ref(null)
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
@@ -84,19 +98,6 @@ const navLinks = [
   { path: '/clientes', label: 'Clientes' }
 ]
 
-// Datos del usuario
-const userName = computed(() => {
-  return authStore.currentUser?.name || 'Admin Datamark'
-})
-
-const userInitials = computed(() => {
-  const name = userName.value
-  const parts = name.split(' ')
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase()
-  }
-  return name.substring(0, 2).toUpperCase()
-})
 
 // Verificar si la ruta está activa
 const isActiveRoute = (path) => {
@@ -114,6 +115,42 @@ const handleLogout = () => {
     router.push({ name: 'login' })
   }
 }
+
+const loadSucursales = async () => {
+
+  const { data, error } = await supabase
+    .from("sucursales")
+    .select("sucursalid, nombresucursal")
+
+  if (error) {
+    console.error(error)
+    return
+  }
+
+  sucursalStore.setSucursales(data)
+
+  // intentar recuperar de localStorage
+  const savedSucursal = localStorage.getItem("sucursal_id")
+
+  if (savedSucursal) {
+    selectedSucursal.value = Number(savedSucursal)
+  } else if (data.length > 0) {
+    selectedSucursal.value = data[0].sucursalid
+  }
+
+  // actualizar store
+  sucursalStore.setSucursal(selectedSucursal.value)
+}
+
+const changeSucursal = () => {
+  sucursalStore.setSucursal(selectedSucursal.value)
+  localStorage.setItem("sucursal_id", selectedSucursal.value)
+}
+
+onMounted(() => {
+  loadSucursales()
+})
+
 </script>
 
 <style scoped>
