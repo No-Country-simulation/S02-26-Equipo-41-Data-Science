@@ -45,30 +45,33 @@ export const useSalesStore = defineStore('sales', () => {
     }
   ])
 
+  const sellers = ref([
+    {
+      id: 1,
+      nombrevendedor: 'Luis Quispe',
+    },
+    {
+      id: 2,
+      nombrevendedor: 'Rosa Flores',
+    },
+    {
+      id: 3,
+      nombrevendedor: 'Pedro Huamán',
+    }
+  ])
+
   // ==========================================
   // GETTERS - CARRITO
   // ==========================================
   
   /**
-   * Subtotal (sin IVA)
+   * Total (sin IVA)
    */
-  const subtotal = computed(() => {
+
+  const total = computed(() => {
     return cart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   })
 
-  /**
-   * IVA (21%)
-   */
-  const iva = computed(() => {
-    return subtotal.value * 0.21
-  })
-
-  /**
-   * Total (subtotal + IVA)
-   */
-  const total = computed(() => {
-    return subtotal.value + iva.value
-  })
 
   /**
    * Cantidad total de items
@@ -109,6 +112,26 @@ export const useSalesStore = defineStore('sales', () => {
       client.name.toLowerCase().includes(search) ||
       client.documentNumber.includes(search)
     )
+  })
+
+  /**
+   * Cliente actual (seleccionado o consumidor final)
+   */
+  const currentSeller = computed(() => {
+    return selectedClient.value || {
+      id: null,
+      name: 'Vendedor Final',
+    }
+  })
+
+  /**
+   * Clientes filtrados por búsqueda
+   */
+  const filteredSellers = computed(() => {
+    if (!searchClientQuery.value) return sellers.value
+    
+    const search = searchClientQuery.value.toLowerCase()
+    return sellers.value.filter(seller => seller.name.toLowerCase().includes(search))
   })
 
   // ==========================================
@@ -243,6 +266,31 @@ export const useSalesStore = defineStore('sales', () => {
   }
 
   // ==========================================
+  // ACTIONS - Vendedor
+  // ==========================================
+  
+  /**
+   * Seleccionar cliente
+   */
+  function selectSeller(seller) {
+    selectedClient.value = seller
+  }
+
+  /**
+   * Quitar cliente seleccionado (volver a consumidor final)
+   */
+  function removeSeller() {
+    selectedClient.value = null
+  }
+
+  /**
+   * Buscar vendedor
+   */
+  function searchSeller(query) {
+    searchClientQuery.value = query
+  }
+
+  // ==========================================
   // ACTIONS - MÉTODOS DE PAGO
   // ==========================================
   
@@ -277,8 +325,6 @@ export const useSalesStore = defineStore('sales', () => {
           subtotal: item.price * item.quantity
         })),
         paymentMethod: selectedPaymentMethod.value,
-        subtotal: subtotal.value,
-        iva: iva.value,
         total: total.value,
         notes: notes.value,
         date: new Date().toISOString()
@@ -292,7 +338,7 @@ export const useSalesStore = defineStore('sales', () => {
       // Limpiar estado después de confirmar
       clearCart()
       removeClient()
-      
+      removeSeller()
       return saleData
     } catch (error) {
       console.error('Error al confirmar venta:', error)
@@ -308,15 +354,16 @@ export const useSalesStore = defineStore('sales', () => {
     selectedClient,
     searchClientQuery,
     clients,
-    
+    sellers,
+
     // Getters
-    subtotal,
-    iva,
     total,
     totalItems,
     isEmpty,
     currentClient,
+    currentSeller,
     filteredClients,
+    filteredSellers,
     
     // Actions - Carrito
     addToCart,
@@ -330,6 +377,11 @@ export const useSalesStore = defineStore('sales', () => {
     selectClient,
     removeClient,
     searchClient,
+
+    // Actions - Vendedor
+    selectSeller,
+    removeSeller,
+    searchSeller,
     
     // Actions - Pago
     selectPaymentMethod,
