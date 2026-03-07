@@ -269,6 +269,15 @@ Durante el desarrollo del MVP se lograron implementar las siguientes capacidades
 
 ---
 
+# 🌐 Enlaces del Proyecto
+
+- [Repositorio del proyecto](https://github.com/No-Country-simulation/S02-26-Equipo-41-Data-Science)
+- [Frontend](https://s02-26-equipo-41-data-science.vercel.app/)
+- [Backend](https://nocountry-backend-production-4a70.up.railway.app/)
+- [Documentación del proyecto](https://docs.google.com/document/d/1y8R8tjP4dwtCEHf75e68zsJ26PesLyWv/edit?usp=drive_link&ouid=112834332168303501124&rtpof=true&sd=true)
+
+---
+
 # 🔮 Futuras Mejoras
 
 El roadmap del proyecto contempla futuras funcionalidades para ampliar las capacidades del sistema.
